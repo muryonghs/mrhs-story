@@ -5,13 +5,72 @@
     <title>우리의 성장 스토리 - TV</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: 'Noto Sans KR', sans-serif; background-color: #121212; color: #e0e0e0; margin: 0; padding: 80px 60px; display: flex; flex-direction: column; align-items: center; }
-        h1 { font-size: 48px; font-weight: 700; margin-bottom: 70px; letter-spacing: -1.5px; background: linear-gradient(to right, #ff9a9e 0%, #fad0c4 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        /* 1. 배경을 밝고 화사한 흰색 톤으로 변경 */
+        body { 
+            font-family: 'Noto Sans KR', sans-serif; 
+            background-color: #fdfdfd; /* 완전 흰색보다 눈이 편안한 밝은 배경 */
+            color: #333333; 
+            margin: 0; 
+            padding: 80px 60px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+        }
+        /* 제목도 흰 배경에 맞게 따뜻한 색상 유지 */
+        h1 { 
+            font-size: 48px; 
+            font-weight: 700; 
+            margin-bottom: 70px; 
+            letter-spacing: -1.5px; 
+            background: linear-gradient(to right, #ff758c 0%, #ff7eb3 100%);
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+        }
         #tv-list { width: 100%; max-width: 1000px; }
-        .story-card { background-color: #1e1e1e; padding: 40px; margin-bottom: 40px; border-radius: 25px; border: 1px solid #333; transition: all 0.5s ease; box-shadow: 0 15px 35px rgba(0,0,0,0.3); position: relative; overflow: hidden; }
-        .story-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: linear-gradient(to right, #ff9a9e 0%, #fad0c4 100%); }
-        .text { font-size: 32px; line-height: 1.6; font-weight: 500; margin-bottom: 30px; word-break: keep-all; color: #ffffff; }
-        .friend { color: #aaa; font-size: 24px; font-weight: 600; text-align: right; font-style: italic; }
+        
+        /* 2. 밝은 배경에 맞춘 감성적인 카드 스타일 */
+        .story-card { 
+            background-color: #ffffff; 
+            padding: 40px; 
+            margin-bottom: 40px; 
+            border-radius: 25px; 
+            border: 1px solid #f0f0f0; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05); /* 부드러운 그림자 */
+            position: relative; 
+            overflow: hidden; 
+            
+            /* 3. 하나씩 스르륵 나타나는 애니메이션 준비 */
+            opacity: 0;
+            transform: translateY(30px);
+            animation: slideUp 0.8s ease forwards;
+        }
+        .story-card::before { 
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 5px; 
+            background: linear-gradient(to right, #ff9a9e 0%, #fad0c4 100%); 
+        }
+        .text { 
+            font-size: 32px; 
+            line-height: 1.6; 
+            font-weight: 500; 
+            margin-bottom: 30px; 
+            word-break: keep-all; 
+            color: #444444; 
+        }
+        .friend { 
+            color: #888888; 
+            font-size: 24px; 
+            font-weight: 600; 
+            text-align: right; 
+            font-style: italic; 
+        }
+
+        /* 스르륵 나타나는 애니메이션 키프레임 */
+        @keyframes slideUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@500;700&display=swap" rel="stylesheet">
 </head>
@@ -22,12 +81,10 @@
     <script>
         const supabaseUrl = 'https://tjeyaqrxepbjyhgeaxwp.supabase.co';
         const supabaseKey = 'sb_publishable_dvsOaA9JN3S6Mk11WKJOOQ_uIib6Cia';
-        // 👉 수정된 부분: 'db' 변수 사용
         const db = window.supabase.createClient(supabaseUrl, supabaseKey);
         const tvListDiv = document.getElementById('tv-list');
 
         async function fetchStories() {
-            // 👉 수정된 부분: db.from 사용
             const { data, error } = await db
                 .from('stories')
                 .select('*')
@@ -35,9 +92,13 @@
             
             if (data) {
                 tvListDiv.innerHTML = '';
-                data.forEach(story => {
+                data.forEach((story, index) => {
                     const div = document.createElement('div');
                     div.className = 'story-card';
+                    
+                    // 4. 카드마다 나타나는 시간을 약간씩 지연시켜서 '하나씩' 흐르게 만듭니다.
+                    div.style.animationDelay = `${index * 0.3}s`;
+                    
                     div.innerHTML = `
                         <div class="text">"${story.text.replace(/\n/g, '<br>')}"</div>
                         <div class="friend">- 나를 도와준 ${story.friend}에게 -</div>
@@ -49,12 +110,33 @@
 
         fetchStories();
 
-        // 👉 수정된 부분: db.channel 사용 (실시간 감지)
+        // 실시간 감지
         db.channel('public:stories')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'stories' }, payload => {
                 fetchStories();
             })
             .subscribe();
+
+        // 5. 화면이 가득 차면 자동으로 천천히 위로 스크롤되는 기능
+        function startAutoScroll() {
+            setInterval(() => {
+                // 화면 맨 아래에 도달했는지 확인
+                const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+                
+                if (maxScroll > 0) { // 사연이 많아서 스크롤바가 생겼을 때만 작동
+                    if (window.scrollY >= maxScroll - 1) {
+                        // 맨 아래면 스르륵 맨 위로 다시 올라갑니다.
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    } else {
+                        // 평소에는 아주 천천히 1픽셀씩 아래로 내려갑니다.
+                        window.scrollBy(0, 1);
+                    }
+                }
+            }, 30); // 30ms 마다 1px씩 이동 (숫자를 줄이면 스크롤 속도가 더 빨라집니다)
+        }
+
+        // 페이지가 열리고 사연들이 다 나타난 뒤(3초 후)에 자동 스크롤 시작
+        setTimeout(startAutoScroll, 3000);
     </script>
 </body>
 </html>
