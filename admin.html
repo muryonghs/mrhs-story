@@ -6,61 +6,14 @@
     <title>사연 관리 센터</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { 
-            font-family: 'Noto Sans KR', sans-serif; 
-            background-color: #f4f7f6; 
-            margin: 0; 
-            padding: 0; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            color: #333;
-        }
-        /* 상단 고정 헤더 */
-        .header {
-            width: 100%;
-            background-color: #fff;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            text-align: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; color: #333; }
+        .header { width: 100%; background-color: #fff; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); text-align: center; position: sticky; top: 0; z-index: 100; box-sizing: border-box;}
         h2 { font-weight: 700; margin: 0; font-size: 20px; color: #444; }
-        
-        #list { 
-            width: 90%; 
-            max-width: 600px; 
-            padding: 30px 0;
-        }
-        
-        /* 모바일용 관리 카드 UI */
-        .story-card { 
-            background-color: #ffffff; 
-            padding: 20px; 
-            margin-bottom: 15px; 
-            border-radius: 15px; 
-            box-shadow: 0 3px 10px rgba(0,0,0,0.03);
-            border-left: 5px solid #ff9a9e; /* 포인트 라인 */
-            position: relative;
-        }
+        #list { width: 90%; max-width: 600px; padding: 30px 0; }
+        .story-card { background-color: #ffffff; padding: 20px; margin-bottom: 15px; border-radius: 15px; box-shadow: 0 3px 10px rgba(0,0,0,0.03); border-left: 5px solid #ff9a9e; position: relative; }
         .story-text { font-size: 16px; line-height: 1.6; margin: 0 0 10px 0; color: #555; word-break: break-all;}
         .story-friend { color: #888; font-size: 14px; margin-bottom: 15px; font-weight: 500; background: #f9f9f9; padding: 8px; border-radius: 8px;}
-        
-        /* 모바일에서 터치하기 쉬운 삭제 버튼 */
-        .delete-btn { 
-            width: 100%;
-            background-color: #fff; 
-            color: #ff6b6b; 
-            border: 1px solid #ffcccc; 
-            padding: 12px; 
-            border-radius: 10px; 
-            font-size: 15px; 
-            font-weight: 600; 
-            cursor: pointer; 
-            transition: all 0.2s;
-        }
+        .delete-btn { width: 100%; background-color: #fff; color: #ff6b6b; border: 1px solid #ffcccc; padding: 12px; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
         .delete-btn:active { background-color: #ff6b6b; color: white; }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -75,11 +28,13 @@
     <script>
         const supabaseUrl = 'https://tjeyaqrxepbjyhgeaxwp.supabase.co';
         const supabaseKey = 'sb_publishable_dvsOaA9JN3S6Mk11WKJOOQ_uIib6Cia';
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        // 👉 수정된 부분: 'db' 변수 사용
+        const db = window.supabase.createClient(supabaseUrl, supabaseKey);
         const listDiv = document.getElementById('list');
 
         async function fetchStories() {
-            const { data, error } = await supabase
+            // 👉 수정된 부분: db.from 사용
+            const { data, error } = await db
                 .from('stories')
                 .select('*')
                 .order('created_at', { ascending: false });
@@ -104,17 +59,16 @@
         }
 
         async function deleteStory(id) {
-            // 모바일 전용 컨펌창
             if(confirm("정말 이 사연을 삭제하시겠습니까?\nTV 화면에서도 즉시 사라집니다.")) {
-                await supabase.from('stories').delete().eq('id', id);
+                // 👉 수정된 부분: db.from 사용
+                await db.from('stories').delete().eq('id', id);
             }
         }
 
         fetchStories();
 
-        // 실시간 감지
-        supabase
-            .channel('public:stories')
+        // 👉 수정된 부분: db.channel 사용 (실시간 감지)
+        db.channel('public:stories')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'stories' }, payload => {
                 fetchStories();
             })
