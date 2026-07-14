@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>사연 관리 센터</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { 
+            font-family: 'Noto Sans KR', sans-serif; 
+            background-color: #f4f7f6; 
+            margin: 0; 
+            padding: 0; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            color: #333;
+        }
+        /* 상단 고정 헤더 */
+        .header {
+            width: 100%;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        h2 { font-weight: 700; margin: 0; font-size: 20px; color: #444; }
+        
+        #list { 
+            width: 90%; 
+            max-width: 600px; 
+            padding: 30px 0;
+        }
+        
+        /* 모바일용 관리 카드 UI */
+        .story-card { 
+            background-color: #ffffff; 
+            padding: 20px; 
+            margin-bottom: 15px; 
+            border-radius: 15px; 
+            box-shadow: 0 3px 10px rgba(0,0,0,0.03);
+            border-left: 5px solid #ff9a9e; /* 포인트 라인 */
+            position: relative;
+        }
+        .story-text { font-size: 16px; line-height: 1.6; margin: 0 0 10px 0; color: #555; word-break: break-all;}
+        .story-friend { color: #888; font-size: 14px; margin-bottom: 15px; font-weight: 500; background: #f9f9f9; padding: 8px; border-radius: 8px;}
+        
+        /* 모바일에서 터치하기 쉬운 삭제 버튼 */
+        .delete-btn { 
+            width: 100%;
+            background-color: #fff; 
+            color: #ff6b6b; 
+            border: 1px solid #ffcccc; 
+            padding: 12px; 
+            border-radius: 10px; 
+            font-size: 15px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: all 0.2s;
+        }
+        .delete-btn:active { background-color: #ff6b6b; color: white; }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="header">
+        <h2>🛠️ 사연 실시간 관리</h2>
+    </div>
+    <div id="list">
+        </div>
+
+    <script>
+        const supabaseUrl = 'https://tjeyaqrxepbjyhgeaxwp.supabase.co';
+        const supabaseKey = 'sb_publishable_dvsOaA9JN3S6Mk11WKJOOQ_uIib6Cia';
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        const listDiv = document.getElementById('list');
+
+        async function fetchStories() {
+            const { data, error } = await supabase
+                .from('stories')
+                .select('*')
+                .order('created_at', { ascending: false });
+            
+            if (data) {
+                listDiv.innerHTML = '';
+                if (data.length === 0) {
+                    listDiv.innerHTML = '<p style="text-align:center; color:#999; margin-top:50px;">아직 접수된 사연이 없습니다.</p>';
+                    return;
+                }
+                data.forEach(story => {
+                    const div = document.createElement('div');
+                    div.className = 'story-card';
+                    div.innerHTML = `
+                        <p class="story-text">${story.text.replace(/\n/g, '<br>')}</p>
+                        <p class="story-friend">To. ${story.friend}</p>
+                        <button class="delete-btn" onclick="deleteStory(${story.id})">이 사연 삭제하기</button>
+                    `;
+                    listDiv.appendChild(div);
+                });
+            }
+        }
+
+        async function deleteStory(id) {
+            // 모바일 전용 컨펌창
+            if(confirm("정말 이 사연을 삭제하시겠습니까?\nTV 화면에서도 즉시 사라집니다.")) {
+                await supabase.from('stories').delete().eq('id', id);
+            }
+        }
+
+        fetchStories();
+
+        // 실시간 감지
+        supabase
+            .channel('public:stories')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'stories' }, payload => {
+                fetchStories();
+            })
+            .subscribe();
+    </script>
+</body>
+</html>
