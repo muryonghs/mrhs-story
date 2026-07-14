@@ -71,18 +71,19 @@
         #highlight-overlay {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(253, 253, 253, 0.96); /* 뒷배경이 살짝 비치는 밝은 배경 */
-            z-index: 2000; /* 제일 위에 나타나도록 설정 */
+            background: rgba(253, 253, 253, 0.96); 
+            z-index: 2000; 
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             opacity: 0;
-            pointer-events: none;
-            transition: opacity 1s ease; /* 부드럽게 나타나고 사라짐 */
+            visibility: hidden; /* 완전히 숨김 처리 추가 */
+            transition: opacity 1s ease, visibility 1s ease;
         }
         #highlight-overlay.active {
             opacity: 1;
+            visibility: visible; /* 활성화 시 보이게 설정 */
         }
         .highlight-card {
             background: white;
@@ -97,10 +98,10 @@
             transition: transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         #highlight-overlay.active .highlight-card {
-            transform: scale(1); /* 나타날 때 살짝 커지는 쫀득한 효과 */
+            transform: scale(1); 
         }
         #highlight-text {
-            font-size: 55px; /* 글씨를 매우 크게 */
+            font-size: 55px; 
             line-height: 1.5;
             color: #222;
             margin-bottom: 50px;
@@ -120,7 +121,7 @@
     <div id="tv-list"></div>
 
     <div id="qr-container">
-        <p>스캔하여 사연 남기기</p>
+        <p>📷 스캔하여 사연 남기기</p>
         <div id="qrcode"></div>
     </div>
 
@@ -144,10 +145,10 @@
             correctLevel : QRCode.CorrectLevel.H 
         });
 
-        // 사연 데이터를 저장해둘 배열과 변수들
         let allStories = [];
-        let isHighlighting = false; // 지금 크게 보기가 켜져 있는지 확인
-        let highlightIndex = 0;     // 몇 번째 사연을 크게 띄울지 순서
+        let isHighlighting = false; 
+        let isScrollingUp = false; // 위로 스크롤 중인지 확인하는 변수 추가
+        let highlightIndex = 0;     
 
         async function fetchStories() {
             const { data, error } = await db
@@ -156,7 +157,7 @@
                 .order('created_at', { ascending: false }); 
             
             if (data) {
-                allStories = data; // 가져온 데이터를 배열에 저장
+                allStories = data; 
                 tvListDiv.innerHTML = '';
                 data.forEach((story, index) => {
                     const div = document.createElement('div');
@@ -180,17 +181,27 @@
             .subscribe();
 
         // ----------------------------------------------------
-        // [기능 1] 오토 스크롤 기능 (끝나면 위로 올리기)
+        // [수정 완료] 오토 스크롤 기능 (충돌 방지 및 소수점 처리)
         // ----------------------------------------------------
         function startAutoScroll() {
             setInterval(() => {
-                if (isHighlighting) return; // 크게 보기가 켜져 있으면 스크롤을 잠시 멈춥니다!
+                // 팝업이 떠있거나, 화면이 위로 올라가고 있을 때는 작동 금지
+                if (isHighlighting || isScrollingUp) return; 
 
+                // 소수점 오차를 없애기 위해 Math.ceil 사용
+                const currentScroll = Math.ceil(window.scrollY); 
                 const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+
                 if (maxScroll > 0) { 
-                    // 끝까지 스크롤 되었을 때 맨 위로 올리기
-                    if (window.scrollY + 1 >= maxScroll) {
+                    // 여유 있게 2픽셀 전에 바닥 도착으로 인식
+                    if (currentScroll >= maxScroll - 2) {
+                        isScrollingUp = true; // 스크롤업 상태 켜기
                         window.scrollTo({ top: 0, behavior: 'smooth' });
+                        
+                        // 화면이 맨 위로 올라갈 시간을 주고 1.5초 뒤에 다시 스크롤 허용
+                        setTimeout(() => {
+                            isScrollingUp = false;
+                        }, 1500);
                     } else {
                         window.scrollBy(0, 1);
                     }
@@ -198,40 +209,38 @@
             }, 30);
         }
 
+        // 페이지 열리고 3초 뒤 스크롤 시작
         setTimeout(startAutoScroll, 3000);
 
         // ----------------------------------------------------
-        // [기능 2] 60초마다 사연 크게 띄워주기 (하이라이트 기능)
+        // [수정 완료] 하이라이트 기능 
         // ----------------------------------------------------
         function showHighlight() {
-            // 사연이 하나도 없으면 실행하지 않음
             if (allStories.length === 0) return;
 
-            isHighlighting = true; // 스크롤 멈춤 작동
+            isHighlighting = true; // 스크롤 멈춤
 
-            // 순서대로 사연 하나를 선택합니다.
             const story = allStories[highlightIndex];
-
-            // 팝업 화면에 글씨 교체
             document.getElementById('highlight-text').innerHTML = `"${story.text.replace(/\n/g, '<br>')}"`;
             document.getElementById('highlight-friend').innerText = `- 나를 도와준 ${story.friend}에게 -`;
 
-            // 팝업 화면에 띄우기
             const overlay = document.getElementById('highlight-overlay');
             overlay.classList.add('active');
 
-            // 12초 뒤에 팝업을 닫고 다시 원래 스크롤로 돌아감
             setTimeout(() => {
                 overlay.classList.remove('active');
-                isHighlighting = false; // 스크롤 다시 시작
+                isHighlighting = false; // 팝업 닫히면 스크롤 다시 시작
                 
-                // 다음 번엔 그다음 사연을 띄우기 위해 숫자 1 증가 (끝까지 가면 다시 처음으로)
                 highlightIndex = (highlightIndex + 1) % allStories.length;
-            }, 12000); // 12000 = 12초 동안 보여줌 (원하시면 수정 가능합니다)
+            }, 12000); 
         }
 
-        // 60000 밀리초(60초) 마다 크게 보기 기능 실행
-        setInterval(showHighlight, 60000);
+        // 테스트를 위해 처음 팝업은 15초 뒤에 뜨게 설정!
+        setTimeout(() => {
+            showHighlight();
+            // 이후부터는 60초(60000ms)마다 반복!
+            setInterval(showHighlight, 60000); 
+        }, 15000); 
     </script>
 </body>
 </html>
