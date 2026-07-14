@@ -1,4 +1,97 @@
-const supabaseUrl = 'https://tjeyaqrxepbjyhgeaxwp.supabase.co';
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>우리의 성장 스토리</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* 감성적인 폰트와 그라데이션 배경 */
+        body { 
+            font-family: 'Noto Sans KR', sans-serif; 
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); /* 따뜻하고 깨끗한 배경 */
+            margin: 0; 
+            padding: 0; 
+            display: flex; 
+            justify-content: center; 
+            min-height: 100vh;
+            color: #333;
+        }
+        .container {
+            width: 90%;
+            max-width: 450px;
+            padding: 50px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        /* 헤더 디자인 */
+        h2 { font-weight: 700; font-size: 24px; margin-bottom: 10px; color: #5d5d5d; letter-spacing: -1px; }
+        .subtitle { font-size: 15px; color: #888; margin-bottom: 40px; text-align: center; line-height: 1.4; }
+
+        /* 감성적인 사연 카드 */
+        .story-form-card {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        /* 모바일 최적화된 입력창 */
+        input, textarea { 
+            width: 100%; 
+            margin-bottom: 20px; 
+            padding: 15px; 
+            font-size: 16px; /* 모바일 자동줌 방지 최소 크기 */
+            border: 1px solid #e0e0e0; 
+            border-radius: 12px; 
+            background-color: #f9f9f9; 
+            box-sizing: border-box; 
+            outline: none; 
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+        input:focus, textarea:focus {
+            border-color: #ff9a9e; /* 감성적인 포커스 색상 */
+            background-color: #fff;
+            box-shadow: 0 0 0 3px rgba(255, 154, 158, 0.15);
+        }
+        
+        /* 부드러운 그라데이션 버튼 */
+        button { 
+            width: 100%; 
+            background: linear-gradient(to right, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);
+            color: white; 
+            border: none; 
+            padding: 16px; 
+            border-radius: 12px; 
+            font-size: 17px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: transform 0.1s, box-shadow 0.2s;
+            box-shadow: 0 5px 15px rgba(255, 154, 158, 0.3);
+        }
+        button:active { transform: scale(0.98); } /* 터치 시 눌리는 효과 */
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h2>실패는 성공의 어머니 🌱</h2>
+        <p class="subtitle">나의 실패했던 경험과,<br>그때 나를 도와준 고마운 친구에게 마음을 전하세요.</p>
+        
+        <div class="story-form-card">
+            <textarea id="storyText" rows="6" placeholder="당신의 따뜻한 이야기를 적어주세요..."></textarea>
+            <input type="text" id="friendName" placeholder="고마운 친구의 이름">
+            <button onclick="sendStory()">마음 보내기</button>
+        </div>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://tjeyaqrxepbjyhgeaxwp.supabase.co';
         const supabaseKey = 'sb_publishable_dvsOaA9JN3S6Mk11WKJOOQ_uIib6Cia';
         const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
@@ -11,24 +104,18 @@ const supabaseUrl = 'https://tjeyaqrxepbjyhgeaxwp.supabase.co';
                 return;
             }
 
-            try {
-                // DB에 데이터 넣기 시도
-                const { data, error } = await supabase
-                    .from('stories')
-                    .insert([{ text: text, friend: friend }]);
-                
-                // 에러가 있다면 화면에 띄우기
-                if (error) {
-                    alert("❌ 슈파베이스 에러: " + error.message);
-                    console.error("에러 상세:", error);
-                } else {
-                    alert("사연이 따뜻하게 접수되었습니다!");
-                    document.getElementById('storyText').value = '';
-                    document.getElementById('friendName').value = '';
-                }
-            } catch (err) {
-                // 코드나 네트워크 자체에 문제가 있을 때 띄우기
-                alert("⚠️ 네트워크 또는 실행 에러: " + err.message);
-                console.error(err);
+            const { error } = await supabase
+                .from('stories')
+                .insert([{ text: text, friend: friend }]);
+            
+            if (error) {
+                alert("사연 접수 중 오류가 발생했습니다 😢");
+            } else {
+                alert("사연이 따뜻하게 접수되었습니다!");
+                document.getElementById('storyText').value = '';
+                document.getElementById('friendName').value = '';
             }
         }
+    </script>
+</body>
+</html>
