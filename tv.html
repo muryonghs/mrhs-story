@@ -6,26 +6,73 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
+        /* 기본 설정 변경: 전체 화면 고정, 내부 스크롤 사용 */
         body { 
             font-family: 'Noto Sans KR', sans-serif; 
             background-color: #fdfdfd; 
             color: #333333; 
             margin: 0; 
-            padding: 80px 60px; 
+            padding: 0;
             display: flex; 
             flex-direction: column; 
             align-items: center; 
+            height: 100vh; /* 화면 전체 높이 사용 */
+            overflow: hidden; /* body 자체의 스크롤 방지 */
         }
+
+        /* 상단 고정 영역 (제목 + 경고문) */
+        #header-container {
+            width: 100%;
+            text-align: center;
+            padding: 50px 20px 20px 20px;
+            background-color: #fdfdfd;
+            z-index: 100;
+        }
+
         h1 { 
             font-size: 48px; 
             font-weight: 700; 
-            margin-bottom: 70px; 
+            margin: 0 0 15px 0; 
             letter-spacing: -1.5px; 
             background: linear-gradient(to right, #ff758c 0%, #ff7eb3 100%);
             -webkit-background-clip: text; 
             -webkit-text-fill-color: transparent; 
         }
-        #tv-list { width: 100%; max-width: 1000px; padding-bottom: 200px; }
+
+        /* 경고 멘트 스타일 */
+        .warning-text {
+            color: #e74c3c;
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+
+        /* 스크롤되는 사연 목록 영역 */
+        #scroll-container {
+            width: 100%;
+            flex: 1; /* 남은 화면 높이를 모두 차지 */
+            overflow-y: auto; /* 내용이 넘치면 세로 스크롤 생성 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 30px;
+        }
+
+        /* 스크롤바 숨기기 (깔끔한 TV 화면을 위해) */
+        #scroll-container::-webkit-scrollbar {
+            display: none;
+        }
+        #scroll-container {
+            -ms-overflow-style: none; /* IE and Edge */
+            scrollbar-width: none; /* Firefox */
+        }
+
+        #tv-list { 
+            width: 100%; 
+            max-width: 1000px; 
+            padding-bottom: 200px; 
+        }
         
         .story-card { 
             background-color: #ffffff; 
@@ -78,12 +125,12 @@
             justify-content: center;
             align-items: center;
             opacity: 0;
-            visibility: hidden; /* 완전히 숨김 처리 추가 */
-            transition: opacity 1s ease, visibility 1s ease;
+            visibility: hidden; 
+            transition: opacity 0.5s ease, visibility 0.5s ease;
         }
         #highlight-overlay.active {
             opacity: 1;
-            visibility: visible; /* 활성화 시 보이게 설정 */
+            visibility: visible; 
         }
         .highlight-card {
             background: white;
@@ -95,7 +142,7 @@
             text-align: center;
             border: 3px solid #ff758c;
             transform: scale(0.9);
-            transition: transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         #highlight-overlay.active .highlight-card {
             transform: scale(1); 
@@ -117,11 +164,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@500;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <h1>🌟 우리의 실패와 성장 스토리 🌟</h1>
-    <div id="tv-list"></div>
+    <div id="header-container">
+        <h1>🌟 우리의 실패와 성장 스토리 🌟</h1>
+        <p class="warning-text">⚠️ 실시간으로 엄격히 관리되고 있습니다. 부적절한 발언은 추후 큰 불이익이 됩니다.</p>
+    </div>
+
+    <div id="scroll-container">
+        <div id="tv-list"></div>
+    </div>
 
     <div id="qr-container">
-        <p>📷 스캔하여 사연 남기기</p>
+        <p>스캔하여 사연 남기기</p>
         <div id="qrcode"></div>
     </div>
 
@@ -136,6 +189,8 @@
         const supabaseUrl = 'https://tjeyaqrxepbjyhgeaxwp.supabase.co';
         const supabaseKey = 'sb_publishable_dvsOaA9JN3S6Mk11WKJOOQ_uIib6Cia';
         const db = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        const scrollContainer = document.getElementById('scroll-container');
         const tvListDiv = document.getElementById('tv-list');
 
         const qrLink = "https://muryonghs.github.io/mrhs-story/"; 
@@ -147,8 +202,7 @@
 
         let allStories = [];
         let isHighlighting = false; 
-        let isScrollingUp = false; // 위로 스크롤 중인지 확인하는 변수 추가
-        let highlightIndex = 0;     
+        let isScrollingUp = false;
 
         async function fetchStories() {
             const { data, error } = await db
@@ -181,66 +235,68 @@
             .subscribe();
 
         // ----------------------------------------------------
-        // [수정 완료] 오토 스크롤 기능 (충돌 방지 및 소수점 처리)
+        // 특정 영역(scroll-container)만 오토 스크롤 되도록 변경
         // ----------------------------------------------------
         function startAutoScroll() {
             setInterval(() => {
-                // 팝업이 떠있거나, 화면이 위로 올라가고 있을 때는 작동 금지
                 if (isHighlighting || isScrollingUp) return; 
 
-                // 소수점 오차를 없애기 위해 Math.ceil 사용
-                const currentScroll = Math.ceil(window.scrollY); 
-                const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+                // window 대신 scrollContainer의 스크롤 위치를 계산합니다.
+                const currentScroll = Math.ceil(scrollContainer.scrollTop); 
+                const maxScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight;
 
                 if (maxScroll > 0) { 
-                    // 여유 있게 2픽셀 전에 바닥 도착으로 인식
                     if (currentScroll >= maxScroll - 2) {
-                        isScrollingUp = true; // 스크롤업 상태 켜기
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        isScrollingUp = true; 
+                        scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
                         
-                        // 화면이 맨 위로 올라갈 시간을 주고 1.5초 뒤에 다시 스크롤 허용
                         setTimeout(() => {
                             isScrollingUp = false;
                         }, 1500);
                     } else {
-                        window.scrollBy(0, 1);
+                        scrollContainer.scrollBy(0, 1);
                     }
                 }
             }, 30);
         }
 
-        // 페이지 열리고 3초 뒤 스크롤 시작
         setTimeout(startAutoScroll, 3000);
 
         // ----------------------------------------------------
-        // [수정 완료] 하이라이트 기능 
+        // 모든 사연을 5초씩 보여주는 하이라이트 기능
         // ----------------------------------------------------
-        function showHighlight() {
-            if (allStories.length === 0) return;
+        // 자바스크립트의 Promise를 활용해 타이머를 만듭니다.
+        const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-            isHighlighting = true; // 스크롤 멈춤
+        async function playAllHighlights() {
+            if (allStories.length === 0 || isHighlighting) return;
 
-            const story = allStories[highlightIndex];
-            document.getElementById('highlight-text').innerHTML = `"${story.text.replace(/\n/g, '<br>')}"`;
-            document.getElementById('highlight-friend').innerText = `- 나를 도와준 ${story.friend}에게 -`;
-
+            isHighlighting = true; // 스크롤 정지
             const overlay = document.getElementById('highlight-overlay');
-            overlay.classList.add('active');
+            overlay.classList.add('active'); // 팝업 띄우기
 
-            setTimeout(() => {
-                overlay.classList.remove('active');
-                isHighlighting = false; // 팝업 닫히면 스크롤 다시 시작
+            // 모든 사연을 순서대로 반복합니다.
+            for (let i = 0; i < allStories.length; i++) {
+                const story = allStories[i];
                 
-                highlightIndex = (highlightIndex + 1) % allStories.length;
-            }, 12000); 
+                // 화면에 사연 적용
+                document.getElementById('highlight-text').innerHTML = `"${story.text.replace(/\n/g, '<br>')}"`;
+                document.getElementById('highlight-friend').innerText = `- 나를 도와준 ${story.friend}에게 -`;
+                
+                // 5초(5000ms) 대기 후 다음 사연으로 넘어갑니다.
+                await delay(5000); 
+            }
+
+            // 모든 사연이 끝나면 팝업을 닫고 스크롤 재개
+            overlay.classList.remove('active');
+            isHighlighting = false; 
         }
 
-        // 테스트를 위해 처음 팝업은 15초 뒤에 뜨게 설정!
-        setTimeout(() => {
-            showHighlight();
-            // 이후부터는 60초(60000ms)마다 반복!
-            setInterval(showHighlight, 60000); 
-        }, 15000); 
+        // 1분(60초)마다 전체 하이라이트 재생 실행
+        setInterval(() => {
+            playAllHighlights();
+        }, 60000); 
+
     </script>
 </body>
 </html>
