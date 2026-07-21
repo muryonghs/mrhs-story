@@ -2,35 +2,33 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>우리의 성장 스토리 - TV</title>
+    <title>우리의 성장 스토리 - 마음 꺼내보기</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        /* 기본 설정 변경: 전체 화면 고정, 내부 스크롤 사용 */
+        /* 기본 화면 설정 */
         body { 
             font-family: 'Noto Sans KR', sans-serif; 
-            background-color: #fdfdfd; 
-            color: #333333; 
+            background-color: #fff0f3; /* 따뜻한 핑크빛 배경으로 변경 */
+            color: #333; 
             margin: 0; 
             padding: 0;
             display: flex; 
             flex-direction: column; 
             align-items: center; 
-            height: 100vh; /* 화면 전체 높이 사용 */
-            overflow: hidden; /* body 자체의 스크롤 방지 */
+            height: 100vh; 
+            overflow: hidden; 
         }
 
-        /* 상단 고정 영역 (제목 + 경고문) */
+        /* 상단 제목 영역 */
         #header-container {
             width: 100%;
             text-align: center;
-            padding: 50px 20px 20px 20px;
-            background-color: #fdfdfd;
+            padding: 60px 20px 20px 20px;
             z-index: 100;
         }
 
         h1 { 
-            font-size: 48px; 
+            font-size: 50px; 
             font-weight: 700; 
             margin: 0 0 15px 0; 
             letter-spacing: -1.5px; 
@@ -39,124 +37,80 @@
             -webkit-text-fill-color: transparent; 
         }
 
-        /* 경고 멘트 스타일 */
-        .warning-text {
-            color: #e74c3c;
-            font-size: 20px;
+        .subtitle {
+            color: #ff758c;
+            font-size: 24px;
             font-weight: 700;
             margin: 0;
             letter-spacing: -0.5px;
         }
 
-        /* 스크롤되는 사연 목록 영역 */
-        #scroll-container {
-            width: 100%;
-            flex: 1; /* 남은 화면 높이를 모두 차지 */
-            overflow-y: auto; /* 내용이 넘치면 세로 스크롤 생성 */
+        /* 중앙 무대 (하트와 사연이 나오는 곳) */
+        #stage {
+            flex: 1;
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding-top: 30px;
-        }
-
-        /* 스크롤바 숨기기 (깔끔한 TV 화면을 위해) */
-        #scroll-container::-webkit-scrollbar {
-            display: none;
-        }
-        #scroll-container {
-            -ms-overflow-style: none; /* IE and Edge */
-            scrollbar-width: none; /* Firefox */
-        }
-
-        #tv-list { 
-            width: 100%; 
-            max-width: 1000px; 
-            padding-bottom: 200px; 
-        }
-        
-        .story-card { 
-            background-color: #ffffff; 
-            padding: 40px; 
-            margin-bottom: 40px; 
-            border-radius: 25px; 
-            border: 1px solid #f0f0f0; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05); 
-            position: relative; 
-            overflow: hidden; 
-            opacity: 0;
-            transform: translateY(30px);
-            animation: slideUp 0.8s ease forwards;
-        }
-        .story-card::before { 
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 5px; 
-            background: linear-gradient(to right, #ff9a9e 0%, #fad0c4 100%); 
-        }
-        .text { font-size: 32px; line-height: 1.6; font-weight: 500; margin-bottom: 30px; word-break: keep-all; color: #444444; }
-        .friend { color: #888888; font-size: 24px; font-weight: 600; text-align: right; font-style: italic; }
-
-        @keyframes slideUp {
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* QR 코드 컨테이너 */
-        #qr-container {
-            position: fixed;
-            bottom: 50px;
-            right: 50px;
-            background: #ffffff;
-            padding: 25px;
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
-            text-align: center;
-            z-index: 1000;
-            border: 2px solid #ffedf0;
-        }
-        #qr-container p { margin: 0 0 15px 0; font-size: 18px; font-weight: 700; color: #ff758c; letter-spacing: -0.5px; }
-        #qrcode { display: flex; justify-content: center; }
-
-        /* 🌟 크게 보기(하이라이트 팝업) 디자인 🌟 */
-        #highlight-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(253, 253, 253, 0.96); 
-            z-index: 2000; 
-            display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
-            opacity: 0;
-            visibility: hidden; 
-            transition: opacity 0.5s ease, visibility 0.5s ease;
+            width: 100%;
+            position: relative;
         }
-        #highlight-overlay.active {
-            opacity: 1;
-            visibility: visible; 
+
+        /* 두근거리는 배경 하트 */
+        #big-heart {
+            font-size: 180px;
+            position: absolute;
+            animation: heartbeat 1.5s infinite;
+            z-index: 1;
+            text-shadow: 0 0 40px rgba(255, 117, 140, 0.5);
+            opacity: 0.8;
         }
-        .highlight-card {
-            background: white;
-            padding: 80px;
+
+        @keyframes heartbeat {
+            0% { transform: scale(1); }
+            15% { transform: scale(1.15); }
+            30% { transform: scale(1); }
+            45% { transform: scale(1.15); }
+            60% { transform: scale(1); }
+            100% { transform: scale(1); }
+        }
+
+        /* 튀어나오는 사연 카드 */
+        #story-card {
+            position: absolute;
+            z-index: 2;
+            background: rgba(255, 255, 255, 0.96);
+            padding: 60px 80px;
             border-radius: 40px;
-            box-shadow: 0 25px 60px rgba(255, 117, 140, 0.2);
-            max-width: 1200px;
-            width: 90%;
+            box-shadow: 0 25px 60px rgba(255, 117, 140, 0.25);
+            border: 3px solid #ffedf0;
+            max-width: 1000px;
+            width: 80%;
             text-align: center;
-            border: 3px solid #ff758c;
-            transform: scale(0.9);
-            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            
+            /* 애니메이션 기본 상태 (숨김 & 축소) */
+            opacity: 0;
+            transform: scale(0.3) translateY(50px);
+            transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); /* 통통 튀는 느낌의 곡선 */
+            pointer-events: none;
         }
-        #highlight-overlay.active .highlight-card {
-            transform: scale(1); 
+
+        /* 카드가 화면에 나타날 때의 상태 */
+        #story-card.show {
+            opacity: 1;
+            transform: scale(1) translateY(0);
         }
-        #highlight-text {
-            font-size: 55px; 
+
+        .story-text {
+            font-size: 48px; 
             line-height: 1.5;
-            color: #222;
-            margin-bottom: 50px;
+            color: #333;
+            margin-bottom: 40px;
             word-break: keep-all;
             font-weight: 700;
         }
-        #highlight-friend {
-            font-size: 38px;
+
+        .story-friend {
+            font-size: 32px;
             color: #ff758c;
             font-weight: 700;
         }
@@ -165,137 +119,80 @@
 </head>
 <body>
     <div id="header-container">
-        <h1>🌟 우리의 실패와 성장 스토리 🌟</h1>
-        <p class="warning-text">⚠️ 실시간으로 엄격히 관리되고 있습니다. 부적절한 발언은 추후 큰 불이익이 됩니다.</p>
+        <h1>🌟 사연 모집이 마감되었습니다 🌟</h1>
+        <p class="subtitle">우리가 모은 소중한 마음들을 하나씩 꺼내볼까요?</p>
     </div>
 
-    <div id="scroll-container">
-        <div id="tv-list"></div>
-    </div>
-
-    <div id="qr-container">
-        <p>스캔하여 사연 남기기</p>
-        <div id="qrcode"></div>
-    </div>
-
-    <div id="highlight-overlay">
-        <div class="highlight-card">
-            <div id="highlight-text">"사연 내용이 들어갑니다."</div>
-            <div id="highlight-friend">- 나를 도와준 친구에게 -</div>
+    <div id="stage">
+        <!-- 배경에서 뛰고 있는 하트 -->
+        <div id="big-heart">❤️</div>
+        
+        <!-- 하트에서 튀어나올 사연 카드 -->
+        <div id="story-card">
+            <div class="story-text" id="display-text"></div>
+            <div class="story-friend" id="display-friend"></div>
         </div>
     </div>
 
     <script>
+        // Supabase 설정 (기존과 동일)
         const supabaseUrl = 'https://tjeyaqrxepbjyhgeaxwp.supabase.co';
         const supabaseKey = 'sb_publishable_dvsOaA9JN3S6Mk11WKJOOQ_uIib6Cia';
         const db = window.supabase.createClient(supabaseUrl, supabaseKey);
         
-        const scrollContainer = document.getElementById('scroll-container');
-        const tvListDiv = document.getElementById('tv-list');
-
-        const qrLink = "https://muryonghs.github.io/mrhs-story/"; 
-        new QRCode(document.getElementById("qrcode"), {
-            text: qrLink, width: 150, height: 150, 
-            colorDark : "#333333", colorLight : "#ffffff", 
-            correctLevel : QRCode.CorrectLevel.H 
-        });
-
         let allStories = [];
-        let isHighlighting = false; 
-        let isScrollingUp = false;
 
+        // 데이터 가져오기
         async function fetchStories() {
             const { data, error } = await db
                 .from('stories')
                 .select('*')
                 .order('created_at', { ascending: false }); 
             
-            if (data) {
+            if (data && data.length > 0) {
                 allStories = data; 
-                tvListDiv.innerHTML = '';
-                data.forEach((story, index) => {
-                    const div = document.createElement('div');
-                    div.className = 'story-card';
-                    div.style.animationDelay = `${index * 0.3}s`;
-                    div.innerHTML = `
-                        <div class="text">"${story.text.replace(/\n/g, '<br>')}"</div>
-                        <div class="friend">- 나를 도와준 ${story.friend}에게 -</div>
-                    `;
-                    tvListDiv.appendChild(div);
-                });
+                startHeartStories(); // 데이터를 다 가져오면 애니메이션 시작
+            } else {
+                document.getElementById('display-text').innerHTML = "아직 모인 사연이 없습니다.";
+                document.getElementById('story-card').classList.add('show');
             }
         }
 
-        fetchStories();
-
-        db.channel('public:stories')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'stories' }, payload => {
-                fetchStories();
-            })
-            .subscribe();
-
-        // ----------------------------------------------------
-        // 특정 영역(scroll-container)만 오토 스크롤 되도록 변경
-        // ----------------------------------------------------
-        function startAutoScroll() {
-            setInterval(() => {
-                if (isHighlighting || isScrollingUp) return; 
-
-                // window 대신 scrollContainer의 스크롤 위치를 계산합니다.
-                const currentScroll = Math.ceil(scrollContainer.scrollTop); 
-                const maxScroll = scrollContainer.scrollHeight - scrollContainer.clientHeight;
-
-                if (maxScroll > 0) { 
-                    if (currentScroll >= maxScroll - 2) {
-                        isScrollingUp = true; 
-                        scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
-                        
-                        setTimeout(() => {
-                            isScrollingUp = false;
-                        }, 1500);
-                    } else {
-                        scrollContainer.scrollBy(0, 1);
-                    }
-                }
-            }, 30);
-        }
-
-        setTimeout(startAutoScroll, 3000);
-
-        // ----------------------------------------------------
-        // 모든 사연을 5초씩 보여주는 하이라이트 기능
-        // ----------------------------------------------------
-        // 자바스크립트의 Promise를 활용해 타이머를 만듭니다.
+        // 특정 시간만큼 대기하는 함수 (Promise 활용)
         const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-        async function playAllHighlights() {
-            if (allStories.length === 0 || isHighlighting) return;
+        // 사연을 하나씩 꺼내서 보여주는 무한 루프 함수
+        async function startHeartStories() {
+            const card = document.getElementById('story-card');
+            const textEl = document.getElementById('display-text');
+            const friendEl = document.getElementById('display-friend');
 
-            isHighlighting = true; // 스크롤 정지
-            const overlay = document.getElementById('highlight-overlay');
-            overlay.classList.add('active'); // 팝업 띄우기
-
-            // 모든 사연을 순서대로 반복합니다.
-            for (let i = 0; i < allStories.length; i++) {
-                const story = allStories[i];
-                
-                // 화면에 사연 적용
-                document.getElementById('highlight-text').innerHTML = `"${story.text.replace(/\n/g, '<br>')}"`;
-                document.getElementById('highlight-friend').innerText = `- 나를 도와준 ${story.friend}에게 -`;
-                
-                // 5초(5000ms) 대기 후 다음 사연으로 넘어갑니다.
-                await delay(5000); 
+            // 영원히 반복해서 사연을 보여주기 위한 무한 루프
+            while (true) {
+                for (let i = 0; i < allStories.length; i++) {
+                    const story = allStories[i];
+                    
+                    // 1. 텍스트 설정
+                    textEl.innerHTML = `"${story.text.replace(/\n/g, '<br>')}"`;
+                    friendEl.innerText = `- 나를 도와준 ${story.friend}에게 -`;
+                    
+                    // 2. 카드 보여주기 (팝업 애니메이션 발생)
+                    card.classList.add('show');
+                    
+                    // 3. 6초 동안 화면에 머무름
+                    await delay(6000); 
+                    
+                    // 4. 카드 숨기기 (하트 속으로 다시 들어가는 효과)
+                    card.classList.remove('show');
+                    
+                    // 5. 완전히 숨겨질 때까지 1초 대기 후 다음 사연으로
+                    await delay(1000);
+                }
             }
-
-            // 모든 사연이 끝나면 팝업을 닫고 스크롤 재개
-            overlay.classList.remove('active');
-            isHighlighting = false; 
         }
 
-        // 1분(60초)마다 전체 하이라이트 재생 실행
-        setInterval(() => {
-            playAllHighlights();
-        }, 60000); 
+        // 프로그램 시작!
+        fetchStories();
 
     </script>
 </body>
