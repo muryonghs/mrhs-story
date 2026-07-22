@@ -2,198 +2,173 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>우리의 성장 스토리 - 마음 꺼내보기</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>무룡고등학교 여름방학 안내</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@500;700;900&display=swap" rel="stylesheet">
     <style>
-        /* 기본 화면 설정 */
-        body { 
-            font-family: 'Noto Sans KR', sans-serif; 
-            background-color: #fff0f3; /* 따뜻한 핑크빛 배경으로 변경 */
-            color: #333; 
-            margin: 0; 
-            padding: 0;
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            height: 100vh; 
-            overflow: hidden; 
-        }
-
-        /* 상단 제목 영역 */
-        #header-container {
-            width: 100%;
-            text-align: center;
-            padding: 60px 20px 20px 20px;
-            z-index: 100;
-        }
-
-        h1 { 
-            font-size: 50px; 
-            font-weight: 700; 
-            margin: 0 0 15px 0; 
-            letter-spacing: -1.5px; 
-            background: linear-gradient(to right, #ff758c 0%, #ff7eb3 100%);
-            -webkit-background-clip: text; 
-            -webkit-text-fill-color: transparent; 
-        }
-
-        .subtitle {
-            color: #ff758c;
-            font-size: 24px;
-            font-weight: 700;
-            margin: 0;
-            letter-spacing: -0.5px;
-        }
-
-        /* 중앙 무대 (하트와 사연이 나오는 곳) */
-        #stage {
-            flex: 1;
+        body {
+            background-color: #2c3e50; /* 어두운 배경으로 TV를 돋보이게 함 */
             display: flex;
             justify-content: center;
             align-items: center;
-            width: 100%;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Noto Sans KR', sans-serif;
+            overflow: hidden;
+        }
+
+        /* TV 전체 컨테이너 */
+        .tv-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* TV 테두리 (베젤) */
+        .tv-bezel {
+            width: 800px;
+            height: 500px;
+            background-color: #1a1a1a;
+            border-radius: 30px;
+            padding: 25px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6), inset 0 5px 15px rgba(255,255,255,0.1);
             position: relative;
         }
 
-        /* 두근거리는 배경 하트 */
-        #big-heart {
-            font-size: 180px;
-            position: absolute;
-            animation: heartbeat 1.5s infinite;
-            z-index: 1;
-            text-shadow: 0 0 40px rgba(255, 117, 140, 0.5);
-            opacity: 0.8;
-        }
-
-        @keyframes heartbeat {
-            0% { transform: scale(1); }
-            15% { transform: scale(1.15); }
-            30% { transform: scale(1); }
-            45% { transform: scale(1.15); }
-            60% { transform: scale(1); }
-            100% { transform: scale(1); }
-        }
-
-        /* 튀어나오는 사연 카드 */
-        #story-card {
-            position: absolute;
-            z-index: 2;
-            background: rgba(255, 255, 255, 0.96);
-            padding: 60px 80px;
-            border-radius: 40px;
-            box-shadow: 0 25px 60px rgba(255, 117, 140, 0.25);
-            border: 3px solid #ffedf0;
-            max-width: 1000px;
-            width: 80%;
+        /* TV 화면 내부 */
+        .tv-screen {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #e0f7fa 0%, #80deea 100%);
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 0 25px rgba(0,0,0,0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
             text-align: center;
-            
-            /* 애니메이션 기본 상태 (숨김 & 축소) */
-            opacity: 0;
-            transform: scale(0.3) translateY(50px);
-            transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); /* 통통 튀는 느낌의 곡선 */
+        }
+
+        /* 브라운관 TV 스캔라인 효과 */
+        .tv-screen::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.05) 50%);
+            background-size: 100% 4px;
+            z-index: 10;
             pointer-events: none;
         }
 
-        /* 카드가 화면에 나타날 때의 상태 */
-        #story-card.show {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-        }
-
-        .story-text {
-            font-size: 48px; 
-            line-height: 1.5;
+        /* TV 켜지는 애니메이션 */
+        .content {
+            z-index: 5;
+            padding: 20px;
             color: #333;
-            margin-bottom: 40px;
-            word-break: keep-all;
-            font-weight: 700;
+            animation: turnOn 1.5s cubic-bezier(0.23, 1, 0.32, 1) forwards;
         }
 
-        .story-friend {
-            font-size: 32px;
-            color: #ff758c;
+        @keyframes turnOn {
+            0% { transform: scale(1, 0.001); opacity: 0; filter: brightness(10); }
+            40% { transform: scale(1, 0.001); opacity: 1; filter: brightness(5); }
+            100% { transform: scale(1, 1); filter: brightness(1); }
+        }
+
+        /* 텍스트 및 이미지 스타일 */
+        h1 {
+            font-size: 2.8em;
+            color: #0277bd;
+            margin: 0 0 15px 0;
+            font-weight: 900;
+            letter-spacing: -1px;
+            text-shadow: 2px 2px 4px rgba(255,255,255,0.5);
+        }
+
+        .mascot {
+            width: 180px;
+            margin: 5px 0;
+            /* 청룡이가 둥둥 떠다니는 효과 */
+            animation: float 3s ease-in-out infinite; 
+            filter: drop-shadow(0 10px 8px rgba(0,0,0,0.15));
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .date-badge {
+            font-size: 1.5em;
             font-weight: 700;
+            background-color: #ffca28;
+            color: #222;
+            padding: 12px 30px;
+            border-radius: 40px;
+            display: inline-block;
+            margin: 15px 0;
+            box-shadow: 0 5px 15px rgba(255, 202, 40, 0.4);
+            border: 3px solid #fff;
+        }
+
+        .message {
+            font-size: 1.25em;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            font-weight: 500;
+            color: #455a64;
+        }
+
+        .footer {
+            font-size: 1.3em;
+            font-weight: 900;
+            color: #01579b;
+        }
+
+        /* TV 스탠드 (받침대) */
+        .tv-stand {
+            width: 120px;
+            height: 40px;
+            background: linear-gradient(to right, #333, #555, #333);
+        }
+
+        .tv-base {
+            width: 350px;
+            height: 15px;
+            background-color: #111;
+            border-radius: 10px 10px 0 0;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
         }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@500;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div id="header-container">
-        <h1>🌟 사연 모집이 마감되었습니다 🌟</h1>
-        <p class="subtitle">우리가 모은 소중한 마음들을 하나씩 꺼내볼까요?</p>
-    </div>
-
-    <div id="stage">
-        <!-- 배경에서 뛰고 있는 하트 -->
-        <div id="big-heart">❤️</div>
-        
-        <!-- 하트에서 튀어나올 사연 카드 -->
-        <div id="story-card">
-            <div class="story-text" id="display-text"></div>
-            <div class="story-friend" id="display-friend"></div>
+    <div class="tv-container">
+        <!-- TV 화면 부분 -->
+        <div class="tv-bezel">
+            <div class="tv-screen">
+                <div class="content">
+                    <h1>🌊 신나는 여름방학 🌊</h1>
+                    
+                    <!-- 앞서 언급된 청룡이 마스코트 이미지 -->
+                    <img src="image.png" alt="무룡고 청룡 마스코트" class="mascot">
+                    
+                    <div class="date-badge">7. 22.(오늘) ~ 8. 19.(개학식)</div>
+                    
+                    <p class="message">
+                        우리 마스코트 청룡이처럼 예쁜 여의주(목표)를 하나씩 품고<br>
+                        건강하고 알찬 방학 보내시길 바랍니다!
+                    </p>
+                    
+                    <div class="footer">- 무룡고등학교 학생회 올림 -</div>
+                </div>
+            </div>
         </div>
-    </div>
-
-    <script>
-        // Supabase 설정 (기존과 동일)
-        const supabaseUrl = 'https://tjeyaqrxepbjyhgeaxwp.supabase.co';
-        const supabaseKey = 'sb_publishable_dvsOaA9JN3S6Mk11WKJOOQ_uIib6Cia';
-        const db = window.supabase.createClient(supabaseUrl, supabaseKey);
         
-        let allStories = [];
-
-        // 데이터 가져오기
-        async function fetchStories() {
-            const { data, error } = await db
-                .from('stories')
-                .select('*')
-                .order('created_at', { ascending: false }); 
-            
-            if (data && data.length > 0) {
-                allStories = data; 
-                startHeartStories(); // 데이터를 다 가져오면 애니메이션 시작
-            } else {
-                document.getElementById('display-text').innerHTML = "아직 모인 사연이 없습니다.";
-                document.getElementById('story-card').classList.add('show');
-            }
-        }
-
-        // 특정 시간만큼 대기하는 함수 (Promise 활용)
-        const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-        // 사연을 하나씩 꺼내서 보여주는 무한 루프 함수
-        async function startHeartStories() {
-            const card = document.getElementById('story-card');
-            const textEl = document.getElementById('display-text');
-            const friendEl = document.getElementById('display-friend');
-
-            // 영원히 반복해서 사연을 보여주기 위한 무한 루프
-            while (true) {
-                for (let i = 0; i < allStories.length; i++) {
-                    const story = allStories[i];
-                    
-                    // 1. 텍스트 설정
-                    textEl.innerHTML = `"${story.text.replace(/\n/g, '<br>')}"`;
-                    friendEl.innerText = `- 나를 도와준 ${story.friend}에게 -`;
-                    
-                    // 2. 카드 보여주기 (팝업 애니메이션 발생)
-                    card.classList.add('show');
-                    
-                    // 3. 6초 동안 화면에 머무름
-                    await delay(6000); 
-                    
-                    // 4. 카드 숨기기 (하트 속으로 다시 들어가는 효과)
-                    card.classList.remove('show');
-                    
-                    // 5. 완전히 숨겨질 때까지 1초 대기 후 다음 사연으로
-                    await delay(1000);
-                }
-            }
-        }
-
-        // 프로그램 시작!
-        fetchStories();
-
-    </script>
+        <!-- TV 받침대 부분 -->
+        <div class="tv-stand"></div>
+        <div class="tv-base"></div>
+    </div>
 </body>
 </html>
