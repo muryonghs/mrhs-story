@@ -8,136 +8,173 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        /* === 기본 설정 (1080p TV 기준 최적화) === */
-        html { font-size: 16px; } /* 1rem = 16px */
-        body { font-family: 'Pretendard', sans-serif; background: #f5f5f7; color: #1d1d1f; margin: 0; padding: 0; overflow: hidden; width: 100vw; height: 100vh; display: flex; flex-direction: column; letter-spacing: -0.5px; }
+        /* === 전체 배경 (16:9 비율이 아닐 경우 남는 여백은 검은색 처리) === */
+        body { 
+            background: #000000; 
+            margin: 0; 
+            padding: 0; 
+            overflow: hidden; 
+            width: 100vw; 
+            height: 100vh; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+        }
+
+        /* === 16:9 고정 캔버스 (1920x1080) === */
+        .tv-screen {
+            width: 1920px;
+            height: 1080px;
+            background: #f5f5f7;
+            position: relative;
+            transform-origin: center center;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            font-family: 'Pretendard', sans-serif;
+            color: #1d1d1f;
+            letter-spacing: -0.5px;
+        }
         
-        /* 상단 헤더 */
-        .header { padding: 30px 60px; display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.7); backdrop-filter: saturate(180%) blur(20px); border-bottom: 1px solid rgba(0, 0, 0, 0.05); z-index: 100; height: 12vh; box-sizing: border-box; }
-        .header-title { font-size: 2.6rem; font-weight: 800; color: #1d1d1f; letter-spacing: -1px; }
-        .header-clock { font-size: 2.8rem; font-weight: 800; color: #1d1d1f; text-align: right; }
-        .header-date { font-size: 1.3rem; color: #86868b; font-weight: 600; margin-bottom: 5px; }
+        /* 상단 헤더 (여유로운 공간 확보) */
+        .header { height: 130px; padding: 0 80px; display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.7); backdrop-filter: saturate(180%) blur(20px); border-bottom: 1px solid rgba(0, 0, 0, 0.05); z-index: 100; flex-shrink: 0; }
+        .header-title { font-size: 36px; font-weight: 800; color: #1d1d1f; letter-spacing: -1px; }
+        
+        /* 날짜 및 시간 영역 여백 조정 */
+        .header-right { display: flex; flex-direction: column; justify-content: center; align-items: flex-end; }
+        .header-date { font-size: 20px; color: #86868b; font-weight: 600; margin-bottom: 8px; line-height: 1; }
+        .header-clock { font-size: 42px; font-weight: 900; color: #1d1d1f; line-height: 1; }
 
         /* 화면 전환 컨테이너 */
-        .slide-container { flex: 1; position: relative; width: 100%; height: 88vh; }
-        .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 60px 80px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.8s ease-in-out; pointer-events: none; z-index: 1; }
+        .slide-container { flex: 1; position: relative; width: 100%; height: 950px; }
+        .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 60px 100px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; opacity: 0; transition: opacity 0.8s ease-in-out; pointer-events: none; z-index: 1; }
         .slide.active { opacity: 1; pointer-events: auto; z-index: 10; }
 
-        /* 공통 제목 */
-        .slide-title { font-size: 4.5rem; font-weight: 800; text-align: center; margin-bottom: 60px; color: #1d1d1f; letter-spacing: -1.5px; width: 100%; }
+        /* 공통 제목 (위치 및 크기 고정) */
+        .slide-title { font-size: 64px; font-weight: 800; text-align: center; margin-bottom: 70px; color: #1d1d1f; letter-spacing: -1.5px; width: 100%; flex-shrink: 0; }
 
         /* 1. 양심우산 */
-        .umb-status-box { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; }
-        .umb-text { font-size: 6rem; font-weight: 800; padding: 40px 100px; border-radius: 50px; box-shadow: 0 15px 40px rgba(0,0,0,0.08); transition: all 0.3s; }
+        .umb-status-box { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; margin-top: -50px; }
+        .umb-text { font-size: 80px; font-weight: 800; padding: 40px 120px; border-radius: 60px; box-shadow: 0 15px 40px rgba(0,0,0,0.08); transition: all 0.3s; }
         .umb-on { background: #34c759; color: white; }
         .umb-off { background: #ff3b30; color: white; }
-        .umb-location { font-size: 3rem; font-weight: 700; color: #86868b; margin-top: 40px; display: none; }
+        .umb-location { font-size: 36px; font-weight: 700; color: #86868b; margin-top: 40px; display: none; }
 
         /* 2. 시설예약현황 */
         .facility-table { width: 100%; max-width: 1400px; margin: 0 auto; border-collapse: separate; border-spacing: 0; background: #ffffff; border-radius: 30px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.04); border: 1px solid #e5e5ea; }
-        .facility-table th { background: #fbfbfd; color: #86868b; font-size: 1.8rem; padding: 25px; text-align: center; font-weight: 700; border-bottom: 1px solid #e5e5ea; }
-        .facility-table td { font-size: 2.2rem; padding: 35px 25px; text-align: center; border-bottom: 1px solid #f5f5f7; font-weight: 600; color: #1d1d1f; }
+        .facility-table th { background: #fbfbfd; color: #86868b; font-size: 26px; padding: 25px; text-align: center; font-weight: 700; border-bottom: 1px solid #e5e5ea; }
+        .facility-table td { font-size: 32px; padding: 30px 25px; text-align: center; border-bottom: 1px solid #f5f5f7; font-weight: 600; color: #1d1d1f; }
         .facility-table tr:last-child td { border-bottom: none; }
-        .badge { padding: 12px 25px; border-radius: 20px; font-size: 1.6rem; font-weight: 800; display: inline-block; }
+        .badge { padding: 14px 28px; border-radius: 20px; font-size: 22px; font-weight: 800; display: inline-block; }
         .badge-approved { background: #e3f5eb; color: #196a3e; }
         
-        /* 3 & 4. 가로 스크롤 카드 레이아웃 정밀 조정 */
-        .marquee-wrapper { width: 100%; flex: 1; overflow: hidden; position: relative; display: flex; align-items: center; padding: 20px 0; }
-        .marquee-content { display: flex; gap: 40px; position: absolute; width: max-content; align-items: center; }
+        /* 3 & 4. 가로 스크롤 카드 */
+        .marquee-wrapper { width: 100%; flex: 1; overflow: hidden; position: relative; display: flex; align-items: center; padding: 10px 0; }
+        .marquee-content { display: flex; gap: 50px; position: absolute; width: max-content; align-items: stretch; }
         
-        /* 카드의 높이와 너비를 고정하여 찌그러짐 방지 */
-        .card { width: 500px; height: 680px; background: #ffffff; border-radius: 35px; padding: 35px; display: flex; flex-direction: column; box-shadow: 0 15px 40px rgba(0,0,0,0.06); border: 1px solid #e5e5ea; flex-shrink: 0; box-sizing: border-box; }
+        /* 16:9 비율 최적화 카드 크기 */
+        .card { width: 440px; min-height: 560px; background: #ffffff; border-radius: 30px; padding: 30px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.06); border: 1px solid #e5e5ea; flex-shrink: 0; box-sizing: border-box; }
         
-        /* 사진 영역 (비율 유지, 남는 공간은 회색 배경) */
-        .card-img { width: 100%; height: 420px; flex-shrink: 0; object-fit: contain; background: #f5f5f7; border-radius: 20px; margin-bottom: 25px; }
+        .card-img { width: 100%; height: 320px; flex-shrink: 0; object-fit: contain; background: #f5f5f7; border-radius: 18px; margin-bottom: 25px; }
+        .card-content { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; }
         
-        /* 텍스트 영역 (남은 공간을 차지하여 수직 중앙 정렬) */
-        .card-content { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-        
-        /* 제목 말줄임표 처리 (최대 2줄) */
-        .card-title { font-size: 2.4rem; font-weight: 800; color: #1d1d1f; margin: 0 0 15px 0; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; white-space: normal; }
-        
-        .card-info { font-size: 1.6rem; color: #86868b; font-weight: 600; line-height: 1.5; white-space: normal; }
+        .card-title { font-size: 32px; font-weight: 800; color: #1d1d1f; margin: 0 0 15px 0; line-height: 1.4; word-break: keep-all; }
+        .card-info { font-size: 22px; color: #86868b; font-weight: 600; line-height: 1.55; word-break: keep-all; }
         .card-info strong { color: #1d1d1f; margin-right: 5px; }
         
         /* 5. 학사일정 */
         .calendar-list { max-width: 1200px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; justify-content: center; flex: 1; }
         .cal-item { display: flex; align-items: center; background: #ffffff; margin-bottom: 25px; padding: 40px 60px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); border: 1px solid #e5e5ea; }
-        .cal-date { font-size: 2.8rem; font-weight: 800; color: #0071e3; width: 280px; letter-spacing: -1px; }
-        .cal-name { font-size: 2.8rem; font-weight: 700; color: #1d1d1f; }
+        .cal-date { font-size: 38px; font-weight: 800; color: #0071e3; width: 300px; letter-spacing: -1px; }
+        .cal-name { font-size: 38px; font-weight: 700; color: #1d1d1f; }
 
         /* 6. QR코드 (포털 안내) */
-        .qr-box { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; }
-        .qr-image { width: 450px; height: 450px; background: white; padding: 30px; border-radius: 40px; margin-bottom: 50px; box-shadow: 0 20px 50px rgba(0,0,0,0.08); border: 1px solid #e5e5ea; }
-        .qr-desc { font-size: 3rem; color: #1d1d1f; font-weight: 700; text-align: center; line-height: 1.6; }
+        .qr-box { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; margin-top: -40px; }
+        .qr-image { width: 400px; height: 400px; background: white; padding: 30px; border-radius: 40px; margin-bottom: 50px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); border: 1px solid #e5e5ea; }
+        .qr-desc { font-size: 36px; color: #1d1d1f; font-weight: 700; text-align: center; line-height: 1.6; word-break: keep-all; }
 
-        .empty-msg { font-size: 2.6rem; color: #86868b; text-align: center; width: 100%; font-weight: 600; padding: 50px; }
+        .empty-msg { font-size: 38px; color: #86868b; text-align: center; width: 100%; font-weight: 600; padding: 50px; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div class="header-title">무룡고등학교 학생 통합 포털</div>
-        <div>
-            <div class="header-date" id="current-date">로딩중...</div>
-            <div class="header-clock" id="current-time">00:00:00</div>
-        </div>
-    </div>
-
-    <div class="slide-container">
-        <!-- 1. 양심우산 -->
-        <div class="slide" id="slide-0" data-type="static">
-            <div class="slide-title">양심우산 운영 현황</div>
-            <div class="umb-status-box">
-                <div id="umb-display" class="umb-text umb-on">데이터 확인 중...</div>
-                <div id="umb-location" class="umb-location">대여 장소: 1층 본관 입구</div>
+    <!-- 16:9 고정 캔버스 -->
+    <div class="tv-screen" id="tv-screen">
+        
+        <div class="header">
+            <div class="header-title">무룡고등학교 학생 통합 포털</div>
+            <div class="header-right">
+                <div class="header-date" id="current-date">로딩중...</div>
+                <div class="header-clock" id="current-time">00:00:00</div>
             </div>
         </div>
 
-        <!-- 2. 시설예약현황 -->
-        <div class="slide" id="slide-1" data-type="static">
-            <div class="slide-title">오늘의 시설 예약 현황</div>
-            <div style="width: 100%; flex: 1; display: flex; align-items: center;">
-                <table class="facility-table">
-                    <thead><tr><th>예약자</th><th>장소</th><th>이용 시간</th><th>상태</th></tr></thead>
-                    <tbody id="fac-list"></tbody>
-                </table>
+        <div class="slide-container">
+            <!-- 1. 양심우산 -->
+            <div class="slide" id="slide-0" data-type="static">
+                <div class="slide-title">양심우산 운영 현황</div>
+                <div class="umb-status-box">
+                    <div id="umb-display" class="umb-text umb-on">데이터 확인 중...</div>
+                    <div id="umb-location" class="umb-location">대여 장소: 1층 본관 입구</div>
+                </div>
+            </div>
+
+            <!-- 2. 시설예약현황 -->
+            <div class="slide" id="slide-1" data-type="static">
+                <div class="slide-title">오늘의 시설 예약 현황</div>
+                <div style="width: 100%; flex: 1; display: flex; align-items: center; justify-content: center;">
+                    <table class="facility-table">
+                        <thead><tr><th>예약자</th><th>장소</th><th>이용 시간</th><th>상태</th></tr></thead>
+                        <tbody id="fac-list"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 3. 학생회 행사 (스크롤) -->
+            <div class="slide" id="slide-2" data-type="scroll">
+                <div class="slide-title">학생회 행사 안내</div>
+                <div class="marquee-wrapper">
+                    <div class="marquee-content" id="council-list"></div>
+                </div>
+            </div>
+
+            <!-- 4. 학사일정 -->
+            <div class="slide" id="slide-3" data-type="static">
+                <div class="slide-title">다가오는 학사 일정</div>
+                <div class="calendar-list" id="calendar-list"></div>
+            </div>
+
+            <!-- 5. 분실물 등록 현황 (스크롤) -->
+            <div class="slide" id="slide-4" data-type="scroll">
+                <div class="slide-title">분실물 등록 현황</div>
+                <div class="marquee-wrapper">
+                    <div class="marquee-content" id="lost-list"></div>
+                </div>
+            </div>
+
+            <!-- 6. QR코드 (포털 안내) -->
+            <div class="slide" id="slide-5" data-type="static">
+                <div class="slide-title">모바일 통합 포털 접속</div>
+                <div class="qr-box">
+                    <img class="qr-image" src="https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=https://muryonghs.github.io/muryonghs-mr-student/&margin=10" alt="포털 QR">
+                    <div class="qr-desc">QR코드를 스캔해 스마트폰에서 더 많은 정보를 확인하고<br>학교생활에 대한 건의사항도 편리하게 작성해 주세요.</div>
+                </div>
             </div>
         </div>
 
-        <!-- 3. 학생회 행사 (스크롤) -->
-        <div class="slide" id="slide-2" data-type="scroll">
-            <div class="slide-title">학생회 행사 안내</div>
-            <div class="marquee-wrapper">
-                <div class="marquee-content" id="council-list"></div>
-            </div>
-        </div>
-
-        <!-- 4. 학사일정 -->
-        <div class="slide" id="slide-3" data-type="static">
-            <div class="slide-title">다가오는 학사 일정</div>
-            <div class="calendar-list" id="calendar-list"></div>
-        </div>
-
-        <!-- 5. 분실물 등록 현황 (스크롤) -->
-        <div class="slide" id="slide-4" data-type="scroll">
-            <div class="slide-title">분실물 등록 현황</div>
-            <div class="marquee-wrapper">
-                <div class="marquee-content" id="lost-list"></div>
-            </div>
-        </div>
-
-        <!-- 6. QR코드 (포털 안내) -->
-        <div class="slide" id="slide-5" data-type="static">
-            <div class="slide-title">모바일 통합 포털 접속</div>
-            <div class="qr-box">
-                <img class="qr-image" src="https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=https://muryonghs.github.io/muryonghs-mr-student/&margin=10" alt="포털 QR">
-                <div class="qr-desc">QR코드를 스캔해 스마트폰에서 더 많은 정보를 확인하고<br>학교생활에 대한 건의사항도 편리하게 작성해 주세요.</div>
-            </div>
-        </div>
-    </div>
+    </div> <!-- // tv-screen -->
 
     <script>
+        // === 해상도 강제 스케일링 로직 ===
+        // 브라우저 창 크기에 맞춰 1920x1080 캔버스를 화면 정중앙에 비율 그대로 확대/축소시킵니다.
+        function resizeScreen() {
+            const screen = document.getElementById('tv-screen');
+            const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+            screen.style.transform = `scale(${scale})`;
+        }
+        window.addEventListener('resize', resizeScreen);
+        resizeScreen(); // 최초 실행
+
         // Supabase 초기화
         const DB_URL = 'https://vfftkdnzjemeipuhlzfv.supabase.co';
         const DB_KEY = 'sb_publishable_9Q7vn7So6HvUSMPu5BhyDA_9qz928H-';
@@ -151,8 +188,8 @@
         // 슬라이드 타이머 설정
         const slides = document.querySelectorAll('.slide');
         let currentSlideIndex = 0;
-        const staticSlideDuration = 10000; // 고정된 화면 대기시간: 10초
-        const scrollSpeed = 200; // 스크롤 속도 (숫자가 작을수록 느림)
+        const staticSlideDuration = 10000; // 고정 화면(비 스크롤) 대기시간: 10초
+        const scrollSpeed = 200; // 스크롤 속도
 
         // 시계 업데이트
         function updateClock() {
@@ -200,7 +237,7 @@
 
                 const list = document.getElementById('fac-list');
                 if (!data || data.length === 0) {
-                    list.innerHTML = '<tr><td colspan="4" style="padding: 80px; color:#86868b;">오늘 확정된 예약이 없습니다.</td></tr>';
+                    list.innerHTML = '<tr><td colspan="4" style="padding: 60px; color:#86868b;">오늘 확정된 예약이 없습니다.</td></tr>';
                     return;
                 }
                 list.innerHTML = data.map(res => {
@@ -209,7 +246,7 @@
                     const timeStr = `${String(d1.getHours()).padStart(2,'0')}:${String(d1.getMinutes()).padStart(2,'0')} ~ ${String(d2.getHours()).padStart(2,'0')}:${String(d2.getMinutes()).padStart(2,'0')}`;
                     const nameStr = `${res.student_name.charAt(0)}*${res.student_name.charAt(res.student_name.length-1)}`;
                     return `<tr>
-                        <td>${nameStr} <span style="font-size:1.6rem; color:#86868b; margin-left:8px;">(${res.student_id.toString().substring(0,2)}**)</span></td>
+                        <td>${nameStr} <span style="font-size:22px; color:#86868b; margin-left:10px;">(${res.student_id.toString().substring(0,2)}**)</span></td>
                         <td><strong>${res.room_name}</strong></td>
                         <td>${timeStr}</td>
                         <td><span class="badge badge-approved">승인완료</span></td>
@@ -316,34 +353,28 @@
 
             const slideType = slide.getAttribute('data-type');
             
-            // 스크롤이 필요한 화면일 경우
             if (slideType === 'scroll') {
                 const marqueeContent = slide.querySelector('.marquee-content');
                 
-                // 데이터가 없을 때
                 if (marqueeContent.children.length === 0 || marqueeContent.innerHTML.includes('empty-msg')) {
                     setTimeout(playNextSlide, staticSlideDuration);
                 } else {
-                    // 위치 초기화
                     marqueeContent.style.transition = 'none';
-                    marqueeContent.style.transform = `translateX(100vw)`;
+                    // 캔버스 크기인 1920px 밖에서 시작하도록 1920px 부여
+                    marqueeContent.style.transform = `translateX(1920px)`;
                     
                     setTimeout(() => {
                         const contentWidth = marqueeContent.scrollWidth;
-                        const distance = window.innerWidth + contentWidth;
+                        const distance = 1920 + contentWidth; // 이동할 전체 거리
                         const duration = (distance / scrollSpeed) * 1000;
 
-                        // 스크롤 시작
                         marqueeContent.style.transition = `transform ${duration}ms linear`;
                         marqueeContent.style.transform = `translateX(-${contentWidth}px)`;
 
-                        // 스크롤 완전 종료 후 다음 슬라이드
                         setTimeout(playNextSlide, duration);
                     }, 100);
                 }
-            } 
-            // 일반 고정 화면일 경우
-            else {
+            } else {
                 setTimeout(playNextSlide, staticSlideDuration);
             }
         }
