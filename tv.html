@@ -8,63 +8,70 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        /* === 애플 스타일 기본 설정 (화이트/라이트그레이 톤) === */
+        /* === 기본 설정 (1080p TV 기준 최적화) === */
+        html { font-size: 16px; } /* 1rem = 16px */
         body { font-family: 'Pretendard', sans-serif; background: #f5f5f7; color: #1d1d1f; margin: 0; padding: 0; overflow: hidden; width: 100vw; height: 100vh; display: flex; flex-direction: column; letter-spacing: -0.5px; }
         
         /* 상단 헤더 */
-        .header { padding: 25px 50px; display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.7); backdrop-filter: saturate(180%) blur(20px); border-bottom: 1px solid rgba(0, 0, 0, 0.05); z-index: 100; height: 10vh; box-sizing: border-box; }
-        .header-title { font-size: 2.2rem; font-weight: 800; color: #1d1d1f; display: flex; align-items: center; gap: 15px; letter-spacing: -1px; }
-        .header-clock { font-size: 2.4rem; font-weight: 800; color: #1d1d1f; text-align: right; }
-        .header-date { font-size: 1.1rem; color: #86868b; font-weight: 600; margin-bottom: 5px; }
+        .header { padding: 30px 60px; display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.7); backdrop-filter: saturate(180%) blur(20px); border-bottom: 1px solid rgba(0, 0, 0, 0.05); z-index: 100; height: 12vh; box-sizing: border-box; }
+        .header-title { font-size: 2.6rem; font-weight: 800; color: #1d1d1f; letter-spacing: -1px; }
+        .header-clock { font-size: 2.8rem; font-weight: 800; color: #1d1d1f; text-align: right; }
+        .header-date { font-size: 1.3rem; color: #86868b; font-weight: 600; margin-bottom: 5px; }
 
         /* 화면 전환 컨테이너 */
-        .slide-container { flex: 1; position: relative; width: 100%; height: 90vh; }
-        .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 40px 50px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.8s ease-in-out; pointer-events: none; z-index: 1; }
+        .slide-container { flex: 1; position: relative; width: 100%; height: 88vh; }
+        .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 60px 80px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.8s ease-in-out; pointer-events: none; z-index: 1; }
         .slide.active { opacity: 1; pointer-events: auto; z-index: 10; }
 
         /* 공통 제목 */
-        .slide-title { font-size: 3.5rem; font-weight: 800; text-align: center; margin-bottom: 40px; color: #1d1d1f; letter-spacing: -1.5px; width: 100%; }
+        .slide-title { font-size: 4.5rem; font-weight: 800; text-align: center; margin-bottom: 60px; color: #1d1d1f; letter-spacing: -1.5px; width: 100%; }
 
         /* 1. 양심우산 */
         .umb-status-box { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; }
-        .umb-text { font-size: 4.5rem; font-weight: 800; padding: 25px 70px; border-radius: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); transition: all 0.3s; }
+        .umb-text { font-size: 6rem; font-weight: 800; padding: 40px 100px; border-radius: 50px; box-shadow: 0 15px 40px rgba(0,0,0,0.08); transition: all 0.3s; }
         .umb-on { background: #34c759; color: white; }
         .umb-off { background: #ff3b30; color: white; }
-        .umb-location { font-size: 2.2rem; font-weight: 700; color: #86868b; margin-top: 30px; display: none; }
+        .umb-location { font-size: 3rem; font-weight: 700; color: #86868b; margin-top: 40px; display: none; }
 
         /* 2. 시설예약현황 */
-        .facility-table { width: 100%; max-width: 1200px; margin: 0 auto; border-collapse: separate; border-spacing: 0; background: #ffffff; border-radius: 25px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.04); border: 1px solid #e5e5ea; }
-        .facility-table th { background: #fbfbfd; color: #86868b; font-size: 1.4rem; padding: 20px; text-align: center; font-weight: 700; border-bottom: 1px solid #e5e5ea; }
-        .facility-table td { font-size: 1.6rem; padding: 20px; text-align: center; border-bottom: 1px solid #f5f5f7; font-weight: 600; color: #1d1d1f; }
+        .facility-table { width: 100%; max-width: 1400px; margin: 0 auto; border-collapse: separate; border-spacing: 0; background: #ffffff; border-radius: 30px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.04); border: 1px solid #e5e5ea; }
+        .facility-table th { background: #fbfbfd; color: #86868b; font-size: 1.8rem; padding: 25px; text-align: center; font-weight: 700; border-bottom: 1px solid #e5e5ea; }
+        .facility-table td { font-size: 2.2rem; padding: 35px 25px; text-align: center; border-bottom: 1px solid #f5f5f7; font-weight: 600; color: #1d1d1f; }
         .facility-table tr:last-child td { border-bottom: none; }
-        .badge { padding: 10px 20px; border-radius: 20px; font-size: 1.3rem; font-weight: 800; display: inline-block; }
+        .badge { padding: 12px 25px; border-radius: 20px; font-size: 1.6rem; font-weight: 800; display: inline-block; }
         .badge-approved { background: #e3f5eb; color: #196a3e; }
         
-        /* 3 & 4. 가로 스크롤(행사, 분실물) 카드 */
-        .marquee-wrapper { width: 100%; flex: 1; overflow: hidden; position: relative; display: flex; align-items: center; }
-        .marquee-content { display: flex; gap: 30px; position: absolute; width: max-content; }
+        /* 3 & 4. 가로 스크롤 카드 레이아웃 정밀 조정 */
+        .marquee-wrapper { width: 100%; flex: 1; overflow: hidden; position: relative; display: flex; align-items: center; padding: 20px 0; }
+        .marquee-content { display: flex; gap: 40px; position: absolute; width: max-content; align-items: center; }
         
-        .card { width: 420px; background: #ffffff; border-radius: 30px; padding: 25px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.06); border: 1px solid #e5e5ea; flex-shrink: 0; }
+        /* 카드의 높이와 너비를 고정하여 찌그러짐 방지 */
+        .card { width: 500px; height: 680px; background: #ffffff; border-radius: 35px; padding: 35px; display: flex; flex-direction: column; box-shadow: 0 15px 40px rgba(0,0,0,0.06); border: 1px solid #e5e5ea; flex-shrink: 0; box-sizing: border-box; }
         
-        /* 사진 잘림 방지 */
-        .card-img { width: 100%; height: 300px; object-fit: contain; background: #f5f5f7; border-radius: 20px; margin-bottom: 20px; }
+        /* 사진 영역 (비율 유지, 남는 공간은 회색 배경) */
+        .card-img { width: 100%; height: 420px; flex-shrink: 0; object-fit: contain; background: #f5f5f7; border-radius: 20px; margin-bottom: 25px; }
         
-        .card-title { font-size: 2rem; font-weight: 800; color: #1d1d1f; margin: 0 0 12px 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .card-info { font-size: 1.3rem; color: #86868b; font-weight: 600; line-height: 1.5; }
-        .card-info strong { color: #1d1d1f; }
+        /* 텍스트 영역 (남은 공간을 차지하여 수직 중앙 정렬) */
+        .card-content { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        
+        /* 제목 말줄임표 처리 (최대 2줄) */
+        .card-title { font-size: 2.4rem; font-weight: 800; color: #1d1d1f; margin: 0 0 15px 0; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; white-space: normal; }
+        
+        .card-info { font-size: 1.6rem; color: #86868b; font-weight: 600; line-height: 1.5; white-space: normal; }
+        .card-info strong { color: #1d1d1f; margin-right: 5px; }
         
         /* 5. 학사일정 */
-        .calendar-list { max-width: 1000px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; justify-content: center; flex: 1; }
-        .cal-item { display: flex; align-items: center; background: #ffffff; margin-bottom: 15px; padding: 30px 40px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e5e5ea; }
-        .cal-date { font-size: 2.2rem; font-weight: 800; color: #0071e3; width: 220px; letter-spacing: -1px; }
-        .cal-name { font-size: 2.2rem; font-weight: 700; color: #1d1d1f; }
+        .calendar-list { max-width: 1200px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; justify-content: center; flex: 1; }
+        .cal-item { display: flex; align-items: center; background: #ffffff; margin-bottom: 25px; padding: 40px 60px; border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); border: 1px solid #e5e5ea; }
+        .cal-date { font-size: 2.8rem; font-weight: 800; color: #0071e3; width: 280px; letter-spacing: -1px; }
+        .cal-name { font-size: 2.8rem; font-weight: 700; color: #1d1d1f; }
 
-        /* 6. QR코드 (건의함 통합) */
+        /* 6. QR코드 (포털 안내) */
         .qr-box { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; }
-        .qr-image { width: 350px; height: 350px; background: white; padding: 25px; border-radius: 35px; margin-bottom: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); border: 1px solid #e5e5ea; }
-        .qr-desc { font-size: 2.2rem; color: #1d1d1f; font-weight: 700; text-align: center; line-height: 1.6; }
+        .qr-image { width: 450px; height: 450px; background: white; padding: 30px; border-radius: 40px; margin-bottom: 50px; box-shadow: 0 20px 50px rgba(0,0,0,0.08); border: 1px solid #e5e5ea; }
+        .qr-desc { font-size: 3rem; color: #1d1d1f; font-weight: 700; text-align: center; line-height: 1.6; }
 
-        .empty-msg { font-size: 2.2rem; color: #86868b; text-align: center; width: 100%; font-weight: 600; padding: 50px; }
+        .empty-msg { font-size: 2.6rem; color: #86868b; text-align: center; width: 100%; font-weight: 600; padding: 50px; }
     </style>
 </head>
 <body>
@@ -124,7 +131,7 @@
         <div class="slide" id="slide-5" data-type="static">
             <div class="slide-title">모바일 통합 포털 접속</div>
             <div class="qr-box">
-                <img class="qr-image" src="https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=https://muryonghs.github.io/muryonghs-mr-student/&margin=10" alt="포털 QR">
+                <img class="qr-image" src="https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=https://muryonghs.github.io/muryonghs-mr-student/&margin=10" alt="포털 QR">
                 <div class="qr-desc">QR코드를 스캔해 스마트폰에서 더 많은 정보를 확인하고<br>학교생활에 대한 건의사항도 편리하게 작성해 주세요.</div>
             </div>
         </div>
@@ -193,7 +200,7 @@
 
                 const list = document.getElementById('fac-list');
                 if (!data || data.length === 0) {
-                    list.innerHTML = '<tr><td colspan="4" style="padding: 60px; color:#86868b;">오늘 확정된 예약이 없습니다.</td></tr>';
+                    list.innerHTML = '<tr><td colspan="4" style="padding: 80px; color:#86868b;">오늘 확정된 예약이 없습니다.</td></tr>';
                     return;
                 }
                 list.innerHTML = data.map(res => {
@@ -202,7 +209,7 @@
                     const timeStr = `${String(d1.getHours()).padStart(2,'0')}:${String(d1.getMinutes()).padStart(2,'0')} ~ ${String(d2.getHours()).padStart(2,'0')}:${String(d2.getMinutes()).padStart(2,'0')}`;
                     const nameStr = `${res.student_name.charAt(0)}*${res.student_name.charAt(res.student_name.length-1)}`;
                     return `<tr>
-                        <td>${nameStr} <span style="font-size:1.3rem; color:#86868b; margin-left:5px;">(${res.student_id.toString().substring(0,2)}**)</span></td>
+                        <td>${nameStr} <span style="font-size:1.6rem; color:#86868b; margin-left:8px;">(${res.student_id.toString().substring(0,2)}**)</span></td>
                         <td><strong>${res.room_name}</strong></td>
                         <td>${timeStr}</td>
                         <td><span class="badge badge-approved">승인완료</span></td>
@@ -220,12 +227,14 @@
                 return;
             }
             listDiv.innerHTML = data.map(ev => {
-                const img = ev.poster_url ? ev.poster_url : 'https://via.placeholder.com/400x350/e5e5ea/86868b?text=No+Image';
+                const img = ev.poster_url ? ev.poster_url : 'https://via.placeholder.com/500x400/e5e5ea/86868b?text=No+Image';
                 return `
                     <div class="card">
-                        <img src="${img}" class="card-img" alt="행사">
-                        <div class="card-title">${ev.title}</div>
-                        <div class="card-info"><strong>기간:</strong> ${ev.event_period}<br><strong>주관:</strong> ${ev.department}</div>
+                        <img src="${img}" class="card-img" alt="사진">
+                        <div class="card-content">
+                            <div class="card-title">${ev.title}</div>
+                            <div class="card-info"><strong>기간:</strong> ${ev.event_period}<br><strong>주관:</strong> ${ev.department}</div>
+                        </div>
                     </div>`;
             }).join('');
         }
@@ -239,12 +248,14 @@
                 return;
             }
             listDiv.innerHTML = data.map(item => {
-                const img = item.photo_url ? item.photo_url : 'https://via.placeholder.com/400x350/e5e5ea/86868b?text=No+Image';
+                const img = item.photo_url ? item.photo_url : 'https://via.placeholder.com/500x400/e5e5ea/86868b?text=No+Image';
                 return `
                     <div class="card">
-                        <img src="${img}" class="card-img" alt="분실물">
-                        <div class="card-title">${item.item_name}</div>
-                        <div class="card-info"><strong>발견:</strong> ${item.found_location}<br><strong>수령:</strong> ${item.pickup_location}</div>
+                        <img src="${img}" class="card-img" alt="사진">
+                        <div class="card-content">
+                            <div class="card-title">${item.item_name}</div>
+                            <div class="card-info"><strong>발견:</strong> ${item.found_location}<br><strong>수령:</strong> ${item.pickup_location}</div>
+                        </div>
                     </div>`;
             }).join('');
         }
