@@ -8,7 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        /* === 전체 배경 (16:9 비율이 아닐 경우 남는 여백은 검은색 처리) === */
+        /* === 전체 배경 (16:9 비율 유지를 위한 캔버스 세팅) === */
         body { 
             background: #000000; 
             margin: 0; 
@@ -16,17 +16,19 @@
             overflow: hidden; 
             width: 100vw; 
             height: 100vh; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
+            position: relative;
         }
 
-        /* === 16:9 고정 캔버스 (1920x1080) === */
+        /* === 완벽한 16:9 고정 캔버스 (1920x1080) === */
         .tv-screen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
             width: 1920px;
             height: 1080px;
+            margin-left: -960px; /* 너비의 절반 */
+            margin-top: -540px;  /* 높이의 절반 */
             background: #f5f5f7;
-            position: relative;
             transform-origin: center center;
             overflow: hidden;
             display: flex;
@@ -36,11 +38,11 @@
             letter-spacing: -0.5px;
         }
         
-        /* 상단 헤더 (여유로운 공간 확보) */
+        /* 상단 헤더 */
         .header { height: 130px; padding: 0 80px; display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.7); backdrop-filter: saturate(180%) blur(20px); border-bottom: 1px solid rgba(0, 0, 0, 0.05); z-index: 100; flex-shrink: 0; }
         .header-title { font-size: 36px; font-weight: 800; color: #1d1d1f; letter-spacing: -1px; }
         
-        /* 날짜 및 시간 영역 여백 조정 */
+        /* 날짜 및 시간 */
         .header-right { display: flex; flex-direction: column; justify-content: center; align-items: flex-end; }
         .header-date { font-size: 20px; color: #86868b; font-weight: 600; margin-bottom: 8px; line-height: 1; }
         .header-clock { font-size: 42px; font-weight: 900; color: #1d1d1f; line-height: 1; }
@@ -50,7 +52,7 @@
         .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 60px 100px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; opacity: 0; transition: opacity 0.8s ease-in-out; pointer-events: none; z-index: 1; }
         .slide.active { opacity: 1; pointer-events: auto; z-index: 10; }
 
-        /* 공통 제목 (위치 및 크기 고정) */
+        /* 공통 제목 */
         .slide-title { font-size: 64px; font-weight: 800; text-align: center; margin-bottom: 70px; color: #1d1d1f; letter-spacing: -1.5px; width: 100%; flex-shrink: 0; }
 
         /* 1. 양심우산 */
@@ -72,12 +74,14 @@
         .marquee-wrapper { width: 100%; flex: 1; overflow: hidden; position: relative; display: flex; align-items: center; padding: 10px 0; }
         .marquee-content { display: flex; gap: 50px; position: absolute; width: max-content; align-items: stretch; }
         
-        /* 16:9 비율 최적화 카드 크기 */
+        /* 카드 크기 */
         .card { width: 440px; min-height: 560px; background: #ffffff; border-radius: 30px; padding: 30px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.06); border: 1px solid #e5e5ea; flex-shrink: 0; box-sizing: border-box; }
         
-        .card-img { width: 100%; height: 320px; flex-shrink: 0; object-fit: contain; background: #f5f5f7; border-radius: 18px; margin-bottom: 25px; }
-        .card-content { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; }
+        /* 사진 영역 (이미지 없을 때의 표시 포함) */
+        .card-img { width: 100%; height: 320px; flex-shrink: 0; object-fit: contain; background: #f5f5f7; border-radius: 18px; margin-bottom: 25px; display: flex; justify-content: center; align-items: center; }
+        .no-image-text { font-size: 22px; font-weight: 700; color: #86868b; text-align: center; line-height: 1.4; }
         
+        .card-content { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; }
         .card-title { font-size: 32px; font-weight: 800; color: #1d1d1f; margin: 0 0 15px 0; line-height: 1.4; word-break: keep-all; }
         .card-info { font-size: 22px; color: #86868b; font-weight: 600; line-height: 1.55; word-break: keep-all; }
         .card-info strong { color: #1d1d1f; margin-right: 5px; }
@@ -88,7 +92,7 @@
         .cal-date { font-size: 38px; font-weight: 800; color: #0071e3; width: 300px; letter-spacing: -1px; }
         .cal-name { font-size: 38px; font-weight: 700; color: #1d1d1f; }
 
-        /* 6. QR코드 (포털 안내) */
+        /* 6. QR코드 */
         .qr-box { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; margin-top: -40px; }
         .qr-image { width: 400px; height: 400px; background: white; padding: 30px; border-radius: 40px; margin-bottom: 50px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); border: 1px solid #e5e5ea; }
         .qr-desc { font-size: 36px; color: #1d1d1f; font-weight: 700; text-align: center; line-height: 1.6; word-break: keep-all; }
@@ -98,7 +102,7 @@
 </head>
 <body>
 
-    <!-- 16:9 고정 캔버스 -->
+    <!-- 중앙에 완벽히 고정되는 16:9 (1920x1080) 캔버스 -->
     <div class="tv-screen" id="tv-screen">
         
         <div class="header">
@@ -130,7 +134,7 @@
                 </div>
             </div>
 
-            <!-- 3. 학생회 행사 (스크롤) -->
+            <!-- 3. 학생회 행사 -->
             <div class="slide" id="slide-2" data-type="scroll">
                 <div class="slide-title">학생회 행사 안내</div>
                 <div class="marquee-wrapper">
@@ -144,7 +148,7 @@
                 <div class="calendar-list" id="calendar-list"></div>
             </div>
 
-            <!-- 5. 분실물 등록 현황 (스크롤) -->
+            <!-- 5. 분실물 등록 현황 -->
             <div class="slide" id="slide-4" data-type="scroll">
                 <div class="slide-title">분실물 등록 현황</div>
                 <div class="marquee-wrapper">
@@ -152,7 +156,7 @@
                 </div>
             </div>
 
-            <!-- 6. QR코드 (포털 안내) -->
+            <!-- 6. 포털 안내 QR -->
             <div class="slide" id="slide-5" data-type="static">
                 <div class="slide-title">모바일 통합 포털 접속</div>
                 <div class="qr-box">
@@ -162,7 +166,7 @@
             </div>
         </div>
 
-    </div> <!-- // tv-screen -->
+    </div>
 
     <script>
         // === 해상도 강제 스케일링 로직 ===
@@ -188,8 +192,8 @@
         // 슬라이드 타이머 설정
         const slides = document.querySelectorAll('.slide');
         let currentSlideIndex = 0;
-        const staticSlideDuration = 10000; // 고정 화면(비 스크롤) 대기시간: 10초
-        const scrollSpeed = 200; // 스크롤 속도
+        const staticSlideDuration = 10000; 
+        const scrollSpeed = 200; 
 
         // 시계 업데이트
         function updateClock() {
@@ -264,10 +268,13 @@
                 return;
             }
             listDiv.innerHTML = data.map(ev => {
-                const img = ev.poster_url ? ev.poster_url : 'https://via.placeholder.com/500x400/e5e5ea/86868b?text=No+Image';
+                let imgHtml = ev.poster_url 
+                    ? `<img src="${ev.poster_url}" class="card-img" alt="행사 사진">` 
+                    : `<div class="card-img"><span class="no-image-text">등록된 사진이<br>없습니다</span></div>`;
+                    
                 return `
                     <div class="card">
-                        <img src="${img}" class="card-img" alt="사진">
+                        ${imgHtml}
                         <div class="card-content">
                             <div class="card-title">${ev.title}</div>
                             <div class="card-info"><strong>기간:</strong> ${ev.event_period}<br><strong>주관:</strong> ${ev.department}</div>
@@ -285,10 +292,13 @@
                 return;
             }
             listDiv.innerHTML = data.map(item => {
-                const img = item.photo_url ? item.photo_url : 'https://via.placeholder.com/500x400/e5e5ea/86868b?text=No+Image';
+                let imgHtml = item.photo_url 
+                    ? `<img src="${item.photo_url}" class="card-img" alt="분실물 사진">` 
+                    : `<div class="card-img"><span class="no-image-text">등록된 사진이<br>없습니다</span></div>`;
+                    
                 return `
                     <div class="card">
-                        <img src="${img}" class="card-img" alt="사진">
+                        ${imgHtml}
                         <div class="card-content">
                             <div class="card-title">${item.item_name}</div>
                             <div class="card-info"><strong>발견:</strong> ${item.found_location}<br><strong>수령:</strong> ${item.pickup_location}</div>
@@ -339,7 +349,6 @@
             
             currentSlideIndex = (currentSlideIndex + 1) % slides.length;
             
-            // 첫 화면으로 돌아오면 백그라운드 데이터 갱신
             if(currentSlideIndex === 0) {
                 loadAllData();
             }
@@ -360,12 +369,12 @@
                     setTimeout(playNextSlide, staticSlideDuration);
                 } else {
                     marqueeContent.style.transition = 'none';
-                    // 캔버스 크기인 1920px 밖에서 시작하도록 1920px 부여
+                    // 캔버스 너비(1920) 밖에서 시작하도록 세팅
                     marqueeContent.style.transform = `translateX(1920px)`;
                     
                     setTimeout(() => {
                         const contentWidth = marqueeContent.scrollWidth;
-                        const distance = 1920 + contentWidth; // 이동할 전체 거리
+                        const distance = 1920 + contentWidth; 
                         const duration = (distance / scrollSpeed) * 1000;
 
                         marqueeContent.style.transition = `transform ${duration}ms linear`;
