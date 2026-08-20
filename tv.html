@@ -26,8 +26,8 @@
             left: 50%;
             width: 1920px;
             height: 1080px;
-            margin-left: -960px; /* 너비의 절반 */
-            margin-top: -540px;  /* 높이의 절반 */
+            margin-left: -960px;
+            margin-top: -540px;
             background: #f5f5f7;
             transform-origin: center center;
             overflow: hidden;
@@ -55,6 +55,12 @@
         /* 공통 제목 */
         .slide-title { font-size: 64px; font-weight: 800; text-align: center; margin-bottom: 70px; color: #1d1d1f; letter-spacing: -1.5px; width: 100%; flex-shrink: 0; }
 
+        /* 0. 팝업 전용 레이아웃 */
+        .popup-content { width: 100%; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .popup-image { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 30px; box-shadow: 0 15px 40px rgba(0,0,0,0.1); }
+        .popup-video { width: 100%; max-width: 1400px; height: 787px; border-radius: 30px; box-shadow: 0 15px 40px rgba(0,0,0,0.1); border: none; background: #000; }
+        .popup-text { font-size: 50px; font-weight: 700; color: #1d1d1f; text-align: center; line-height: 1.6; word-break: keep-all; padding: 0 50px; }
+
         /* 1. 양심우산 */
         .umb-status-box { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; margin-top: -50px; }
         .umb-text { font-size: 80px; font-weight: 800; padding: 40px 120px; border-radius: 60px; box-shadow: 0 15px 40px rgba(0,0,0,0.08); transition: all 0.3s; }
@@ -74,10 +80,7 @@
         .marquee-wrapper { width: 100%; flex: 1; overflow: hidden; position: relative; display: flex; align-items: center; padding: 10px 0; }
         .marquee-content { display: flex; gap: 50px; position: absolute; width: max-content; align-items: stretch; }
         
-        /* 카드 크기 */
         .card { width: 440px; min-height: 560px; background: #ffffff; border-radius: 30px; padding: 30px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.06); border: 1px solid #e5e5ea; flex-shrink: 0; box-sizing: border-box; }
-        
-        /* 사진 영역 (이미지 없을 때의 표시 포함) */
         .card-img { width: 100%; height: 320px; flex-shrink: 0; object-fit: contain; background: #f5f5f7; border-radius: 18px; margin-bottom: 25px; display: flex; justify-content: center; align-items: center; }
         .no-image-text { font-size: 22px; font-weight: 700; color: #86868b; text-align: center; line-height: 1.4; }
         
@@ -102,7 +105,7 @@
 </head>
 <body>
 
-    <!-- 중앙에 완벽히 고정되는 16:9 (1920x1080) 캔버스 -->
+    <!-- 중앙에 완벽히 고정되는 16:9 캔버스 -->
     <div class="tv-screen" id="tv-screen">
         
         <div class="header">
@@ -114,8 +117,16 @@
         </div>
 
         <div class="slide-container">
+            <!-- 0. 특별 공지 (팝업) -->
+            <div class="slide" id="slide-0" data-type="popup">
+                <div class="slide-title" id="popup-title">알림</div>
+                <div class="popup-content" id="popup-media-container">
+                    <!-- 영상, 사진, 텍스트가 동적으로 채워집니다. -->
+                </div>
+            </div>
+
             <!-- 1. 양심우산 -->
-            <div class="slide" id="slide-0" data-type="static">
+            <div class="slide" id="slide-1" data-type="static">
                 <div class="slide-title">양심우산 운영 현황</div>
                 <div class="umb-status-box">
                     <div id="umb-display" class="umb-text umb-on">데이터 확인 중...</div>
@@ -124,7 +135,7 @@
             </div>
 
             <!-- 2. 시설예약현황 -->
-            <div class="slide" id="slide-1" data-type="static">
+            <div class="slide" id="slide-2" data-type="static">
                 <div class="slide-title">오늘의 시설 예약 현황</div>
                 <div style="width: 100%; flex: 1; display: flex; align-items: center; justify-content: center;">
                     <table class="facility-table">
@@ -135,7 +146,7 @@
             </div>
 
             <!-- 3. 학생회 행사 -->
-            <div class="slide" id="slide-2" data-type="scroll">
+            <div class="slide" id="slide-3" data-type="scroll">
                 <div class="slide-title">학생회 행사 안내</div>
                 <div class="marquee-wrapper">
                     <div class="marquee-content" id="council-list"></div>
@@ -143,13 +154,13 @@
             </div>
 
             <!-- 4. 학사일정 -->
-            <div class="slide" id="slide-3" data-type="static">
+            <div class="slide" id="slide-4" data-type="static">
                 <div class="slide-title">다가오는 학사 일정</div>
                 <div class="calendar-list" id="calendar-list"></div>
             </div>
 
             <!-- 5. 분실물 등록 현황 -->
-            <div class="slide" id="slide-4" data-type="scroll">
+            <div class="slide" id="slide-5" data-type="scroll">
                 <div class="slide-title">분실물 등록 현황</div>
                 <div class="marquee-wrapper">
                     <div class="marquee-content" id="lost-list"></div>
@@ -157,7 +168,7 @@
             </div>
 
             <!-- 6. 포털 안내 QR -->
-            <div class="slide" id="slide-5" data-type="static">
+            <div class="slide" id="slide-6" data-type="static">
                 <div class="slide-title">모바일 통합 포털 접속</div>
                 <div class="qr-box">
                     <img class="qr-image" src="https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=https://muryonghs.github.io/muryonghs-mr-student/&margin=10" alt="포털 QR">
@@ -170,14 +181,13 @@
 
     <script>
         // === 해상도 강제 스케일링 로직 ===
-        // 브라우저 창 크기에 맞춰 1920x1080 캔버스를 화면 정중앙에 비율 그대로 확대/축소시킵니다.
         function resizeScreen() {
             const screen = document.getElementById('tv-screen');
             const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
             screen.style.transform = `scale(${scale})`;
         }
         window.addEventListener('resize', resizeScreen);
-        resizeScreen(); // 최초 실행
+        resizeScreen();
 
         // Supabase 초기화
         const DB_URL = 'https://vfftkdnzjemeipuhlzfv.supabase.co';
@@ -189,11 +199,14 @@
         const kstDate = new Date(utc + (9 * 60 * 60 * 1000));
         const todayStr = kstDate.toISOString().split('T')[0];
 
-        // 슬라이드 타이머 설정
+        // 슬라이드 타이머 및 팝업 상태 설정
         const slides = document.querySelectorAll('.slide');
         let currentSlideIndex = 0;
         const staticSlideDuration = 10000; 
+        const popupSlideDuration = 20000; // 팝업은 20초 대기
         const scrollSpeed = 200; 
+        
+        let hasPopup = false; 
 
         // 시계 업데이트
         function updateClock() {
@@ -214,13 +227,45 @@
         setInterval(updateClock, 1000);
         updateClock();
 
-        // 데이터 Fetch 로직
+        // 유튜브 URL에서 ID 추출 도우미 함수
+        function extractYouTubeId(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+
+        async function fetchPopup() {
+            try {
+                const { data } = await db.from('tv_popups').select('*').eq('is_active', true).order('created_at', { ascending: false }).limit(1).single();
+
+                if (data) {
+                    hasPopup = true;
+                    document.getElementById('popup-title').innerText = data.title || "알림";
+                    const container = document.getElementById('popup-media-container');
+
+                    if (data.media_type === 'youtube') {
+                        const videoId = extractYouTubeId(data.media_url);
+                        container.innerHTML = `<iframe class="popup-video" src="https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${videoId}" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+                    } else if (data.media_type === 'image') {
+                        container.innerHTML = `<img src="${data.media_url}" class="popup-image">`;
+                    } else if (data.media_type === 'video') {
+                        container.innerHTML = `<video class="popup-video" src="${data.media_url}" autoplay loop muted></video>`;
+                    } else {
+                        container.innerHTML = `<div class="popup-text">${data.message.replace(/\n/g, '<br>')}</div>`;
+                    }
+                } else {
+                    hasPopup = false;
+                }
+            } catch(e) {
+                hasPopup = false;
+            }
+        }
+
         async function fetchUmbrellaStatus() {
             try {
                 const { data } = await db.from('announcements').select('content').eq('id', 4).single();
                 const umbEl = document.getElementById('umb-display');
                 const umbLocation = document.getElementById('umb-location');
-                
                 if (data && data.content === 'CLOSED') {
                     umbEl.innerText = "현재 운영 중단";
                     umbEl.className = "umb-text umb-off";
@@ -235,10 +280,7 @@
 
         async function fetchFacilityStatus() {
             try {
-                const { data } = await db.from('reservations').select('*')
-                    .eq('status', 'approved').gte('start_time', todayStr)
-                    .order('start_time', { ascending: true }).limit(5);
-
+                const { data } = await db.from('reservations').select('*').eq('status', 'approved').gte('start_time', todayStr).order('start_time', { ascending: true }).limit(5);
                 const list = document.getElementById('fac-list');
                 if (!data || data.length === 0) {
                     list.innerHTML = '<tr><td colspan="4" style="padding: 60px; color:#86868b;">오늘 확정된 예약이 없습니다.</td></tr>';
@@ -262,48 +304,26 @@
         async function fetchCouncilEvents() {
             const listDiv = document.getElementById('council-list');
             const { data } = await db.from('student_council_events').select('*').order('created_at', { ascending: false });
-            
             if (!data || data.length === 0) {
                 listDiv.innerHTML = '<div class="empty-msg">진행 중인 행사가 없습니다.</div>';
                 return;
             }
             listDiv.innerHTML = data.map(ev => {
-                let imgHtml = ev.poster_url 
-                    ? `<img src="${ev.poster_url}" class="card-img" alt="행사 사진">` 
-                    : `<div class="card-img"><span class="no-image-text">등록된 사진이<br>없습니다</span></div>`;
-                    
-                return `
-                    <div class="card">
-                        ${imgHtml}
-                        <div class="card-content">
-                            <div class="card-title">${ev.title}</div>
-                            <div class="card-info"><strong>기간:</strong> ${ev.event_period}<br><strong>주관:</strong> ${ev.department}</div>
-                        </div>
-                    </div>`;
+                let imgHtml = ev.poster_url ? `<img src="${ev.poster_url}" class="card-img" alt="행사 사진">` : `<div class="card-img"><span class="no-image-text">등록된 사진이<br>없습니다</span></div>`;
+                return `<div class="card">${imgHtml}<div class="card-content"><div class="card-title">${ev.title}</div><div class="card-info"><strong>기간:</strong> ${ev.event_period}<br><strong>주관:</strong> ${ev.department}</div></div></div>`;
             }).join('');
         }
 
         async function fetchLostItems() {
             const listDiv = document.getElementById('lost-list');
             const { data } = await db.from('lost_and_found').select('*').order('created_at', { ascending: false });
-            
             if (!data || data.length === 0) {
                 listDiv.innerHTML = '<div class="empty-msg">등록된 분실물이 없습니다.</div>';
                 return;
             }
             listDiv.innerHTML = data.map(item => {
-                let imgHtml = item.photo_url 
-                    ? `<img src="${item.photo_url}" class="card-img" alt="분실물 사진">` 
-                    : `<div class="card-img"><span class="no-image-text">등록된 사진이<br>없습니다</span></div>`;
-                    
-                return `
-                    <div class="card">
-                        ${imgHtml}
-                        <div class="card-content">
-                            <div class="card-title">${item.item_name}</div>
-                            <div class="card-info"><strong>발견:</strong> ${item.found_location}<br><strong>수령:</strong> ${item.pickup_location}</div>
-                        </div>
-                    </div>`;
+                let imgHtml = item.photo_url ? `<img src="${item.photo_url}" class="card-img" alt="분실물 사진">` : `<div class="card-img"><span class="no-image-text">등록된 사진이<br>없습니다</span></div>`;
+                return `<div class="card">${imgHtml}<div class="card-content"><div class="card-title">${item.item_name}</div><div class="card-info"><strong>발견:</strong> ${item.found_location}<br><strong>수령:</strong> ${item.pickup_location}</div></div></div>`;
             }).join('');
         }
 
@@ -323,34 +343,33 @@
                 if(data.SchoolSchedule) { 
                     const events = data.SchoolSchedule[1].row.filter(e => e.EVENT_NM !== '토요휴업일' && e.EVENT_NM !== '휴업일' && parseInt(e.AA_YMD) >= todayYMD); 
                     if(events.length === 0) { listDiv.innerHTML = '<div class="empty-msg">예정된 학사일정이 없습니다.</div>'; return; } 
-                    
                     const displayEvents = events.slice(0, 5);
-                    listDiv.innerHTML = displayEvents.map(e => `
-                        <div class="cal-item">
-                            <div class="cal-date">${e.AA_YMD.substring(4,6)}월 ${e.AA_YMD.substring(6,8)}일</div>
-                            <div class="cal-name">${e.EVENT_NM}</div>
-                        </div>
-                    `).join(''); 
+                    listDiv.innerHTML = displayEvents.map(e => `<div class="cal-item"><div class="cal-date">${e.AA_YMD.substring(4,6)}월 ${e.AA_YMD.substring(6,8)}일</div><div class="cal-name">${e.EVENT_NM}</div></div>`).join(''); 
                 } else { listDiv.innerHTML = '<div class="empty-msg">일정이 없습니다.</div>'; } 
             } catch(e) { listDiv.innerHTML = '<div class="empty-msg">일정을 불러오지 못했습니다.</div>'; } 
         }
 
-        function loadAllData() {
-            fetchUmbrellaStatus();
-            fetchFacilityStatus();
-            fetchCouncilEvents();
-            fetchLostItems();
-            fetchNeisCalendar();
+        // ⭐핵심: 데이터를 '완전히' 다 가져올 때까지 기다리도록 병렬 처리(await)
+        async function loadAllData() {
+            await Promise.all([
+                fetchPopup(),
+                fetchUmbrellaStatus(),
+                fetchFacilityStatus(),
+                fetchCouncilEvents(),
+                fetchLostItems(),
+                fetchNeisCalendar()
+            ]);
         }
 
         // --- 동적 스크롤 완료 후 다음 화면 전환 로직 --- //
-        function playNextSlide() {
+        async function playNextSlide() {
             slides[currentSlideIndex].classList.remove('active');
             
             currentSlideIndex = (currentSlideIndex + 1) % slides.length;
             
+            // 팝업 화면(첫 화면)으로 돌아오면 최신 데이터를 '완전히' 가져올 때까지 대기
             if(currentSlideIndex === 0) {
-                loadAllData();
+                await loadAllData(); 
             }
             
             showCurrentSlide();
@@ -358,18 +377,25 @@
 
         function showCurrentSlide() {
             const slide = slides[currentSlideIndex];
-            slide.classList.add('active');
-
             const slideType = slide.getAttribute('data-type');
             
-            if (slideType === 'scroll') {
+            // 팝업 화면일 때 데이터가 없으면 즉시 스킵
+            if (slideType === 'popup' && !hasPopup) {
+                playNextSlide();
+                return;
+            }
+
+            slide.classList.add('active');
+
+            if (slideType === 'popup') {
+                setTimeout(playNextSlide, popupSlideDuration);
+            }
+            else if (slideType === 'scroll') {
                 const marqueeContent = slide.querySelector('.marquee-content');
-                
                 if (marqueeContent.children.length === 0 || marqueeContent.innerHTML.includes('empty-msg')) {
                     setTimeout(playNextSlide, staticSlideDuration);
                 } else {
                     marqueeContent.style.transition = 'none';
-                    // 캔버스 너비(1920) 밖에서 시작하도록 세팅
                     marqueeContent.style.transform = `translateX(1920px)`;
                     
                     setTimeout(() => {
@@ -383,17 +409,17 @@
                         setTimeout(playNextSlide, duration);
                     }, 100);
                 }
-            } else {
+            } 
+            else {
                 setTimeout(playNextSlide, staticSlideDuration);
             }
         }
 
         // 시스템 시작
-        loadAllData();
-        
-        setTimeout(() => {
+        (async function initSystem() {
+            await loadAllData();
             showCurrentSlide();
-        }, 500);
+        })();
 
     </script>
 </body>
