@@ -29,11 +29,18 @@
         .popup-video { width: 100%; height: 100%; object-fit: contain; border-radius: 40px; box-shadow: 0 20px 50px rgba(0,0,0,0.2); border: none; background: #000; display: block; }
         .popup-text { font-size: 60px; font-weight: 700; color: #1d1d1f; text-align: center; line-height: 1.6; word-break: keep-all; padding: 0 50px; }
 
-        .umb-status-box { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; margin-top: -50px; }
-        .umb-text { font-size: 80px; font-weight: 800; padding: 40px 120px; border-radius: 60px; box-shadow: 0 15px 40px rgba(0,0,0,0.08); transition: all 0.3s; }
+        .umb-status-box { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; margin-top: -30px; }
+        .umb-text { font-size: 70px; font-weight: 800; padding: 35px 100px; border-radius: 60px; box-shadow: 0 15px 40px rgba(0,0,0,0.08); transition: all 0.3s; margin-bottom: 15px; }
         .umb-on { background: #34c759; color: white; }
         .umb-off { background: #ff3b30; color: white; }
-        .umb-location { font-size: 36px; font-weight: 700; color: #86868b; margin-top: 40px; display: none; }
+        .umb-location { font-size: 36px; font-weight: 700; color: #86868b; display: none; }
+        
+        /* 추가된 대여패스 QR 디자인 */
+        .umb-qr-box { display: none; text-align: center; margin-top: 40px; animation: fadeIn 0.5s ease-in-out; }
+        .umb-qr-img { width: 220px; height: 220px; border-radius: 30px; box-shadow: 0 15px 40px rgba(0,0,0,0.1); border: 1px solid #e5e5ea; background: white; padding: 20px; }
+        .umb-qr-text { font-size: 46px; font-weight: 800; color: #0071e3; margin-top: 25px; letter-spacing: -1px; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         .facility-table { width: 100%; max-width: 1400px; margin: 0 auto; border-collapse: separate; border-spacing: 0; background: #ffffff; border-radius: 30px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.04); border: 1px solid #e5e5ea; }
         .facility-table th { background: #fbfbfd; color: #86868b; font-size: 26px; padding: 25px; text-align: center; font-weight: 700; border-bottom: 1px solid #e5e5ea; }
@@ -78,7 +85,21 @@
             <div class="slide" id="slide-0" data-type="popup">
                 <div class="popup-content" id="popup-media-container"></div>
             </div>
-            <div class="slide" id="slide-1" data-type="static"><div class="slide-title">양심우산 운영 현황</div><div class="umb-status-box"><div id="umb-display" class="umb-text umb-on">데이터 확인 중...</div><div id="umb-location" class="umb-location">대여 장소: 1층 본관 입구</div></div></div>
+            
+            <!-- 양심우산 화면 -->
+            <div class="slide" id="slide-1" data-type="static">
+                <div class="slide-title">양심우산 운영 현황</div>
+                <div class="umb-status-box">
+                    <div id="umb-display" class="umb-text umb-on">데이터 확인 중...</div>
+                    <div id="umb-location" class="umb-location">대여 장소: 1층 본관 입구</div>
+                    <!-- 새로 추가된 QR코드 영역 -->
+                    <div id="umb-qr-box" class="umb-qr-box">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://muryonghs.github.io/muryonghs-mr-student/&margin=10" alt="대여패스 QR" class="umb-qr-img">
+                        <div class="umb-qr-text">미리 대여패스를 준비해 주세요!</div>
+                    </div>
+                </div>
+            </div>
+            
             <div class="slide" id="slide-2" data-type="static"><div class="slide-title">오늘의 시설 예약 현황</div><div style="width: 100%; flex: 1; display: flex; align-items: center; justify-content: center;"><table class="facility-table"><thead><tr><th>예약자</th><th>장소</th><th>이용 시간</th><th>상태</th></tr></thead><tbody id="fac-list"></tbody></table></div></div>
             <div class="slide" id="slide-3" data-type="scroll"><div class="slide-title">학생회 행사 안내</div><div class="marquee-wrapper"><div class="marquee-content" id="council-list"></div></div></div>
             <div class="slide" id="slide-4" data-type="static"><div class="slide-title">다가오는 학사 일정</div><div class="calendar-list" id="calendar-list"></div></div>
@@ -110,7 +131,10 @@
         let activePopups = []; 
         let currentPopupIndex = 0;
         let ytPlayer = null; 
-        let slideTimer = null; // 강제 중단을 위한 타이머 변수
+        let slideTimer = null; 
+        
+        // ⭐ 양심우산 고정 모드 감지 변수
+        let isUmbrellaFixed = false;
 
         function updateClock() {
             const now = new Date();
@@ -133,14 +157,57 @@
             } catch(e) { activePopups = []; }
         }
 
+        // ⭐ 우산 UI 업데이트 및 강제 고정 로직
+        function updateUmbrellaUI(statusContent) {
+            const el = document.getElementById('umb-display');
+            const loc = document.getElementById('umb-location');
+            const qrBox = document.getElementById('umb-qr-box');
+
+            if (statusContent === 'CLOSED') { 
+                // 운영 중단일 때
+                el.innerText = "현재 운영 중단"; 
+                el.className = "umb-text umb-off"; 
+                loc.style.display = "none"; 
+                qrBox.style.display = "none"; // QR 숨김
+                
+                // 만약 우산 화면으로 고정되어 있었다면 해제하고 다음으로 넘김
+                if (isUmbrellaFixed) {
+                    isUmbrellaFixed = false;
+                    playNextSlide(); 
+                }
+            } else { 
+                // 운영 중일 때 (화면 강제 고정 및 QR 표시)
+                el.innerText = "현재 대여 가능"; 
+                el.className = "umb-text umb-on"; 
+                loc.style.display = "block"; 
+                qrBox.style.display = "block"; // QR 표시
+
+                if (!isUmbrellaFixed) {
+                    isUmbrellaFixed = true;
+                    if (slideTimer) clearTimeout(slideTimer);
+                    
+                    // 재생 중이던 영상 즉시 정지
+                    if (slides[currentSlideIndex].getAttribute('data-type') === 'popup') {
+                        if (ytPlayer && typeof ytPlayer.pauseVideo === 'function') ytPlayer.pauseVideo();
+                        const vid = document.getElementById('html5-video');
+                        if (vid) vid.pause();
+                    }
+
+                    // 1번 화면(양심우산)으로 즉시 강제 이동
+                    slides[currentSlideIndex].classList.remove('active');
+                    currentSlideIndex = 1; 
+                    slides[currentSlideIndex].classList.add('active');
+                }
+            }
+        }
+
         async function fetchUmbrellaStatus() {
             try {
                 const { data } = await db.from('announcements').select('content').eq('id', 4).single();
-                const el = document.getElementById('umb-display'), loc = document.getElementById('umb-location');
-                if (data && data.content === 'CLOSED') { el.innerText = "현재 운영 중단"; el.className = "umb-text umb-off"; loc.style.display = "none"; } 
-                else { el.innerText = "현재 대여 가능"; el.className = "umb-text umb-on"; loc.style.display = "block"; }
+                updateUmbrellaUI(data ? data.content : 'CLOSED');
             } catch(e) {}
         }
+
         async function fetchFacilityStatus() {
             try {
                 const { data } = await db.from('reservations').select('*').eq('status', 'approved').gte('start_time', todayStr).order('start_time', { ascending: true }).limit(5);
@@ -179,14 +246,15 @@
             await Promise.all([ fetchPopups(), fetchUmbrellaStatus(), fetchFacilityStatus(), fetchCouncilEvents(), fetchLostItems(), fetchNeisCalendar() ]);
         }
 
-        // ⭐ 휴대폰에서 조작하면 1초만에 반응하는 실시간 통신 기능 추가!
-        db.channel('tv-popups-channel')
+        // ⭐ DB 실시간 감지 로직 (팝업 + 공지사항 모두 처리)
+        db.channel('tv-realtime-channel')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'tv_popups' }, async (payload) => {
-                await fetchPopups(); // 팝업 상태 새로고침
+                // 우산이 고정된 상태에서는 팝업 재생을 무시합니다. (우산이 최우선)
+                if (isUmbrellaFixed) return; 
+
+                await fetchPopups(); 
+                if (slideTimer) clearTimeout(slideTimer); 
                 
-                if (slideTimer) clearTimeout(slideTimer); // 기존 타이머 박살내기 (즉시 정지)
-                
-                // 재생 중이던 영상이 있으면 멈춤
                 if (slides[currentSlideIndex].getAttribute('data-type') === 'popup') {
                     if (ytPlayer && typeof ytPlayer.pauseVideo === 'function') ytPlayer.pauseVideo();
                     const vid = document.getElementById('html5-video');
@@ -195,21 +263,25 @@
 
                 slides[currentSlideIndex].classList.remove('active');
 
-                // 팝업이 켜졌다면 무조건 팝업 화면(0)으로 강제 이동
                 if (activePopups.length > 0) {
                     currentSlideIndex = 0;
                     showCurrentSlide();
-                } 
-                // 팝업이 모두 꺼졌다면 다음 화면(양심우산)으로 강제 이동
-                else {
+                } else {
                     currentSlideIndex = 1;
                     showCurrentSlide();
                 }
             })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, async (payload) => {
+                // 양심우산(id:4) 데이터가 변경되었을 때 즉시 화면 갱신
+                if (payload.new && payload.new.id === 4) {
+                    updateUmbrellaUI(payload.new.content);
+                }
+            })
             .subscribe();
 
-        // 팝업 연속 재생 로직
         function playPopupSequence() {
+            if (isUmbrellaFixed) return; // 고정 시 재생 중단
+
             const popup = activePopups[currentPopupIndex];
             const container = document.getElementById('popup-media-container');
             
@@ -256,7 +328,6 @@
             }
         }
 
-        // 일반 화면 넘김 로직
         async function playNextSlide() {
             if (slides[currentSlideIndex].getAttribute('data-type') === 'popup') {
                 if (ytPlayer && typeof ytPlayer.pauseVideo === 'function') ytPlayer.pauseVideo();
@@ -271,6 +342,11 @@
         }
 
         function showCurrentSlide() {
+            // ⭐ 양심우산 고정 모드일 경우: 아무것도 안 하고 멈춰 있습니다.
+            if (isUmbrellaFixed && currentSlideIndex === 1) {
+                return;
+            }
+
             const slide = slides[currentSlideIndex];
             const slideType = slide.getAttribute('data-type');
             
